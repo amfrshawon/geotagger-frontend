@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>FastGeoTagger — Geotag Photos Free Online</title>
+<meta name="description" content="Free online tool to geotag photos with GPS coordinates. Boost local SEO with geo-tagged images. Batch upload, WebP & AVIF support."/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+/* ── RESET & BASE ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg:       #f5f4f0;
+  --surface:  #ffffff;
+  --border:   #e2e0da;
+  --text:     #1a1a18;
+  --muted:    #6b6b67;
+  --accent:   #1a6ef5;
+  --accent2:  #0ea56b;
+  --danger:   #e53e3e;
+  --radius:   10px;
+  --shadow:   0 1px 3px rgba(0,0,0,.08), 0 4px 16px rgba(0,0,0,.06);
+}
+body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); font-size: 15px; line-height: 1.6; }
+a { color: var(--accent); text-decoration: none; }
+
+/* ── LAYOUT ── */
+.page-wrap { max-width: 900px; margin: 0 auto; padding: 0 16px 80px; }
+
+/* ── NAV ── */
+nav { background: var(--surface); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; }
+.nav-inner { max-width: 900px; margin: 0 auto; padding: 0 16px; display: flex; align-items: center; justify-content: space-between; height: 56px; }
+.logo { font-weight: 600; font-size: 17px; display: flex; align-items: center; gap: 8px; }
+.logo-icon { width: 28px; height: 28px; background: var(--accent); border-radius: 7px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 15px; }
+.nav-badge { font-size: 11px; background: #e8f0fe; color: var(--accent); padding: 2px 8px; border-radius: 20px; font-weight: 500; }
+
+/* ── HERO ── */
+.hero { text-align: center; padding: 48px 0 32px; }
+.hero h1 { font-size: clamp(26px, 5vw, 40px); font-weight: 600; letter-spacing: -0.5px; line-height: 1.2; margin-bottom: 12px; }
+.hero p { color: var(--muted); font-size: 16px; max-width: 520px; margin: 0 auto 24px; }
+.trust-badges { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+.trust-badge { display: flex; align-items: center; gap: 6px; background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 5px 14px; font-size: 12px; color: var(--muted); font-weight: 500; }
+.trust-badge span { font-size: 14px; }
+
+/* ── CARD ── */
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; margin-bottom: 20px; box-shadow: var(--shadow); }
+.card-title { font-weight: 600; font-size: 14px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+.step-num { width: 22px; height: 22px; border-radius: 50%; background: var(--accent); color: #fff; font-size: 11px; font-weight: 600; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+
+/* ── UPLOAD ZONE ── */
+#drop-zone {
+  border: 2px dashed var(--border);
+  border-radius: var(--radius);
+  padding: 40px 24px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color .2s, background .2s;
+  position: relative;
+}
+#drop-zone:hover, #drop-zone.dragover { border-color: var(--accent); background: #f0f5ff; }
+#drop-zone input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+.upload-icon { font-size: 36px; margin-bottom: 10px; }
+.upload-title { font-weight: 600; font-size: 16px; margin-bottom: 4px; }
+.upload-sub { font-size: 13px; color: var(--muted); }
+
+/* ── MAP ── */
+.search-row { display: flex; gap: 10px; margin-bottom: 14px; }
+#location-search { flex: 1; padding: 10px 14px; border: 1px solid var(--border); border-radius: var(--radius); font-family: inherit; font-size: 14px; outline: none; transition: border-color .2s; }
+#location-search:focus { border-color: var(--accent); }
+.btn { padding: 10px 18px; border-radius: var(--radius); border: none; font-family: inherit; font-size: 14px; font-weight: 500; cursor: pointer; transition: opacity .15s, transform .1s; display: inline-flex; align-items: center; gap: 6px; }
+.btn:hover { opacity: .88; transform: translateY(-1px); }
+.btn:active { transform: translateY(0); }
+.btn-primary { background: var(--accent); color: #fff; }
+.btn-ghost { background: var(--surface); border: 1px solid var(--border); color: var(--text); }
+.btn-sm { padding: 6px 12px; font-size: 13px; }
+
+#map { height: 320px; border-radius: var(--radius); overflow: hidden; border: 1px solid var(--border); }
+.coords-display { margin-top: 10px; font-family: 'DM Mono', monospace; font-size: 13px; color: var(--accent2); background: #f0faf6; padding: 8px 12px; border-radius: 8px; display: none; }
+.manual-coords { display: flex; gap: 10px; margin-top: 10px; }
+.manual-coords input { flex: 1; padding: 9px 12px; border: 1px solid var(--border); border-radius: 8px; font-family: inherit; font-size: 13px; }
+
+/* ── PHOTO TABLE ── */
+.table-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; flex-wrap: wrap; gap: 10px; }
+.compress-toggle { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); cursor: pointer; }
+.toggle-track { width: 34px; height: 20px; background: var(--border); border-radius: 10px; position: relative; transition: background .2s; flex-shrink: 0; }
+.toggle-track.on { background: var(--accent2); }
+.toggle-thumb { width: 16px; height: 16px; background: #fff; border-radius: 50%; position: absolute; top: 2px; left: 2px; transition: left .2s; box-shadow: 0 1px 3px rgba(0,0,0,.2); }
+.toggle-track.on .toggle-thumb { left: 16px; }
+
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--border); color: var(--muted); font-weight: 500; font-size: 12px; text-transform: uppercase; letter-spacing: .04em; }
+td { padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: var(--bg); }
+.thumb { width: 42px; height: 42px; object-fit: cover; border-radius: 6px; border: 1px solid var(--border); }
+.thumb-placeholder { width: 42px; height: 42px; border-radius: 6px; background: var(--bg); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 18px; color: var(--muted); }
+.filename-cell { max-width: 180px; }
+.filename-main { font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.filename-sub { color: var(--muted); font-size: 11px; }
+.coord-pill { background: #f0faf6; color: var(--accent2); padding: 3px 8px; border-radius: 20px; font-size: 11px; font-family: 'DM Mono', monospace; white-space: nowrap; }
+.dash { color: var(--border); }
+.action-btns { display: flex; gap: 6px; }
+.icon-btn { width: 30px; height: 30px; border-radius: 7px; border: 1px solid var(--border); background: var(--surface); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 15px; transition: background .15s, border-color .15s; }
+.icon-btn:hover { background: var(--bg); border-color: var(--accent); }
+.icon-btn.del:hover { background: #fff5f5; border-color: var(--danger); }
+.empty-state { text-align: center; padding: 32px; color: var(--muted); font-size: 14px; }
+
+/* ── BOTTOM BAR ── */
+.bottom-bar { position: fixed; bottom: 0; left: 0; right: 0; background: var(--surface); border-top: 1px solid var(--border); padding: 14px 16px; display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap; z-index: 99; box-shadow: 0 -4px 20px rgba(0,0,0,.06); }
+.btn-download { background: var(--accent); color: #fff; }
+.btn-webp { background: #7c3aed; color: #fff; }
+.btn-avif { background: #0ea56b; color: #fff; }
+.btn-lg { padding: 12px 22px; font-size: 14px; }
+#count-badge { background: rgba(255,255,255,.25); border-radius: 20px; padding: 1px 7px; font-size: 12px; }
+
+/* ── STATUS / TOAST ── */
+#toast { position: fixed; top: 70px; right: 16px; background: var(--text); color: #fff; padding: 10px 16px; border-radius: var(--radius); font-size: 13px; opacity: 0; transition: opacity .3s; pointer-events: none; z-index: 200; max-width: 300px; }
+#toast.show { opacity: 1; }
+#toast.success { background: var(--accent2); }
+#toast.error { background: var(--danger); }
+.progress-bar { height: 3px; background: var(--border); border-radius: 2px; overflow: hidden; margin-top: 10px; display: none; }
+.progress-fill { height: 100%; background: var(--accent); transition: width .4s; width: 0%; }
+
+/* ── HOW IT WORKS ── */
+.how-section { padding: 48px 0 32px; }
+.section-title { font-size: 22px; font-weight: 600; text-align: center; margin-bottom: 8px; }
+.section-sub { text-align: center; color: var(--muted); margin-bottom: 32px; }
+.steps-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; }
+.step-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; text-align: center; }
+.step-icon { font-size: 32px; margin-bottom: 10px; }
+.step-card h3 { font-size: 15px; font-weight: 600; margin-bottom: 6px; }
+.step-card p { font-size: 13px; color: var(--muted); }
+
+/* ── MODAL ── */
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.45); display: none; align-items: center; justify-content: center; z-index: 300; padding: 16px; }
+.modal-overlay.open { display: flex; }
+.modal { background: var(--surface); border-radius: 14px; padding: 24px; width: 100%; max-width: 420px; box-shadow: 0 20px 60px rgba(0,0,0,.2); }
+.modal h3 { font-size: 16px; font-weight: 600; margin-bottom: 16px; }
+.modal label { display: block; font-size: 13px; color: var(--muted); margin-bottom: 4px; margin-top: 12px; }
+.modal input { width: 100%; padding: 9px 12px; border: 1px solid var(--border); border-radius: 8px; font-family: inherit; font-size: 14px; }
+.modal-footer { display: flex; gap: 10px; margin-top: 20px; justify-content: flex-end; }
+
+@media (max-width: 600px) {
+  .bottom-bar { gap: 8px; }
+  .btn-lg { padding: 10px 14px; font-size: 13px; }
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-inner">
+    <div class="logo">
+      <div class="logo-icon">📍</div>
+      FastGeoTagger
+    </div>
+    <span class="nav-badge">100% Free · No signup</span>
+  </div>
+</nav>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<!-- MODAL: Metadata editor -->
+<div class="modal-overlay" id="meta-modal">
+  <div class="modal">
+    <h3>Edit metadata</h3>
+    <label>Title / Description</label>
+    <input type="text" id="meta-title" placeholder="e.g. Storefront photo"/>
+    <label>Author / Photographer</label>
+    <input type="text" id="meta-author" placeholder="Your name"/>
+    <label>Copyright</label>
+    <input type="text" id="meta-copyright" placeholder="© 2025 Your Business"/>
+    <div class="modal-footer">
+      <button class="btn btn-ghost btn-sm" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary btn-sm" onclick="saveMetadata()">Save</button>
+    </div>
+  </div>
+</div>
+
+<div class="page-wrap">
+
+  <!-- HERO -->
+  <div class="hero">
+    <h1>Geotag photos free,<br/>boost your local SEO</h1>
+    <p>Add GPS coordinates to your images in seconds. Geo-tagged photos rank higher in Google Maps and local search.</p>
+    <div class="trust-badges">
+      <div class="trust-badge"><span>🔒</span> Files deleted after download</div>
+      <div class="trust-badge"><span>⚡</span> No signup required</div>
+      <div class="trust-badge"><span>📦</span> Batch upload supported</div>
+    </div>
+  </div>
+
+  <!-- STEP 1: UPLOAD -->
+  <div class="card">
+    <div class="card-title"><div class="step-num">1</div> Upload your photos</div>
+    <div id="drop-zone">
+      <input type="file" id="file-input" accept="image/jpeg,image/png,image/webp,image/avif" multiple/>
+      <div class="upload-icon">☁️</div>
+      <div class="upload-title">Drop your photos here or click to upload</div>
+      <div class="upload-sub">Supported formats: JPG, PNG, WEBP &amp; AVIF</div>
+    </div>
+    <div class="progress-bar" id="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+  </div>
+
+  <!-- STEP 2: MAP -->
+  <div class="card">
+    <div class="card-title"><div class="step-num">2</div> Pick a location</div>
+    <div class="search-row">
+      <input type="text" id="location-search" placeholder="Search for a location…" onkeydown="if(event.key==='Enter')searchLocation()"/>
+      <button class="btn btn-primary" onclick="searchLocation()">Search</button>
+    </div>
+    <div id="map"></div>
+    <div class="coords-display" id="coords-display"></div>
+    <div class="manual-coords">
+      <input type="number" id="manual-lat" placeholder="Latitude (e.g. 51.5074)" step="any"/>
+      <input type="number" id="manual-lng" placeholder="Longitude (e.g. -0.1278)" step="any"/>
+      <button class="btn btn-ghost btn-sm" onclick="setManualCoords()">Set</button>
+    </div>
+  </div>
+
+  <!-- STEP 3: QUEUE -->
+  <div class="card">
+    <div class="card-title">
+      <div class="step-num">3</div> Photos to be tagged
+      <div style="margin-left:auto" class="compress-toggle" onclick="toggleCompress()">
+        <div class="toggle-track" id="compress-toggle"><div class="toggle-thumb"></div></div>
+        Compress photo
+      </div>
+    </div>
+    <div id="table-wrap">
+      <div class="empty-state" id="empty-state">📷 No photos yet — upload some above</div>
+      <table id="photo-table" style="display:none">
+        <thead>
+          <tr>
+            <th>Thumbnail</th>
+            <th>Filename</th>
+            <th>Coordinates</th>
+            <th>Metadata</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="photo-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- HOW IT WORKS -->
+  <div class="how-section">
+    <div class="section-title">How it works</div>
+    <div class="section-sub">Three steps to geo-tagged images</div>
+    <div class="steps-grid">
+      <div class="step-card"><div class="step-icon">📤</div><h3>Upload</h3><p>Drag and drop JPG, PNG, WebP or AVIF files — batch upload supported.</p></div>
+      <div class="step-card"><div class="step-icon">📍</div><h3>Pin location</h3><p>Search for an address or click the map to set exact GPS coordinates.</p></div>
+      <div class="step-card"><div class="step-icon">⬇️</div><h3>Download</h3><p>Download geo-tagged images in your preferred format. Files auto-deleted after.</p></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- BOTTOM BAR -->
+<div class="bottom-bar">
+  <button class="btn btn-download btn-lg" onclick="tagAndDownload('jpg')">
+    ⬇️ Download Tagged Photo <span id="count-badge">0</span>
+  </button>
+  <button class="btn btn-webp btn-lg" onclick="tagAndDownload('webp')">⬇️ WebP</button>
+  <button class="btn btn-avif btn-lg" onclick="tagAndDownload('avif')">⬇️ AVIF</button>
+</div>
+
+<script>
+// ── CONFIG ──────────────────────────────────────────────────────────────────
+// Replace this with your Railway backend URL after deploying
+const API_BASE = window.location.hostname === 'localhost'
+  ? 'http://localhost:8000'
+  : 'https://YOUR-RAILWAY-URL.up.railway.app'; // ← update this after Railway deploy
+
+// ── STATE ───────────────────────────────────────────────────────────────────
+let files = [];        // { file, preview, metadata: {title,author,copyright} }
+let selectedLat = null;
+let selectedLng = null;
+let compress = false;
+let editingIndex = null;
+let map, marker;
+
+// ── MAP SETUP ───────────────────────────────────────────────────────────────
+map = L.map('map').setView([51.505, -0.09], 5);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  attribution: '© OpenStreetMap contributors'
+}).addTo(map);
+
+map.on('click', function(e) {
+  setCoords(e.latlng.lat, e.latlng.lng);
+});
+
+function setCoords(lat, lng) {
+  selectedLat = lat;
+  selectedLng = lng;
+  const display = document.getElementById('coords-display');
+  display.style.display = 'block';
+  display.textContent = `📍 ${lat.toFixed(6)}° ${lat >= 0 ? 'N' : 'S'}, ${lng.toFixed(6)}° ${lng >= 0 ? 'E' : 'W'}`;
+  if (marker) map.removeLayer(marker);
+  marker = L.marker([lat, lng]).addTo(map);
+  map.setView([lat, lng], Math.max(map.getZoom(), 12));
+  renderTable();
+}
+
+// ── GEOCODE SEARCH ───────────────────────────────────────────────────────────
+async function searchLocation() {
+  const q = document.getElementById('location-search').value.trim();
+  if (!q) return;
+  showToast('Searching…');
+  try {
+    // Use Nominatim (OpenStreetMap) — free, no API key needed
+    const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}&limit=1`);
+    const data = await res.json();
+    if (!data.length) { showToast('Location not found', 'error'); return; }
+    setCoords(parseFloat(data[0].lat), parseFloat(data[0].lon));
+    showToast('Location set ✓', 'success');
+  } catch(e) {
+    showToast('Search failed', 'error');
+  }
+}
+
+function setManualCoords() {
+  const lat = parseFloat(document.getElementById('manual-lat').value);
+  const lng = parseFloat(document.getElementById('manual-lng').value);
+  if (isNaN(lat) || isNaN(lng)) { showToast('Enter valid coordinates', 'error'); return; }
+  if (lat < -90 || lat > 90 || lng < -180 || lng > 180) { showToast('Coordinates out of range', 'error'); return; }
+  setCoords(lat, lng);
+}
+
+// ── FILE UPLOAD ──────────────────────────────────────────────────────────────
+const dropZone = document.getElementById('drop-zone');
+const fileInput = document.getElementById('file-input');
+
+fileInput.addEventListener('change', e => handleFiles(e.target.files));
+
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('dragover'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+dropZone.addEventListener('drop', e => {
+  e.preventDefault();
+  dropZone.classList.remove('dragover');
+  handleFiles(e.dataTransfer.files);
+});
+
+function handleFiles(fileList) {
+  Array.from(fileList).forEach(file => {
+    if (!file.type.startsWith('image/')) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      files.push({ file, preview: ev.target.result, metadata: { title: '', author: '', copyright: '' } });
+      renderTable();
+      updateCount();
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+// ── TABLE RENDER ─────────────────────────────────────────────────────────────
+function renderTable() {
+  const empty = document.getElementById('empty-state');
+  const table = document.getElementById('photo-table');
+  const tbody = document.getElementById('photo-tbody');
+
+  if (files.length === 0) {
+    empty.style.display = 'block';
+    table.style.display = 'none';
+    return;
+  }
+  empty.style.display = 'none';
+  table.style.display = 'table';
+
+  tbody.innerHTML = files.map((f, i) => `
+    <tr>
+      <td><img class="thumb" src="${f.preview}" alt=""/></td>
+      <td class="filename-cell">
+        <div class="filename-main">${f.file.name}</div>
+        <div class="filename-sub">${(f.file.size / 1024).toFixed(0)} KB · ${f.file.type}</div>
+      </td>
+      <td>${selectedLat !== null
+        ? `<span class="coord-pill">${selectedLat.toFixed(4)}, ${selectedLng.toFixed(4)}</span>`
+        : '<span class="dash">—</span>'}</td>
+      <td>${f.metadata.title || f.metadata.author
+        ? `<span class="coord-pill">✓ set</span>`
+        : '<span class="dash">—</span>'}</td>
+      <td>
+        <div class="action-btns">
+          <button class="icon-btn" onclick="openModal(${i})" title="Edit metadata">✏️</button>
+          <button class="icon-btn del" onclick="removeFile(${i})" title="Remove">🗑️</button>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function removeFile(i) {
+  files.splice(i, 1);
+  renderTable();
+  updateCount();
+}
+
+function updateCount() {
+  document.getElementById('count-badge').textContent = files.length;
+}
+
+// ── COMPRESS TOGGLE ──────────────────────────────────────────────────────────
+function toggleCompress() {
+  compress = !compress;
+  const track = document.getElementById('compress-toggle');
+  track.classList.toggle('on', compress);
+}
+
+// ── METADATA MODAL ────────────────────────────────────────────────────────────
+function openModal(i) {
+  editingIndex = i;
+  const m = files[i].metadata;
+  document.getElementById('meta-title').value = m.title;
+  document.getElementById('meta-author').value = m.author;
+  document.getElementById('meta-copyright').value = m.copyright;
+  document.getElementById('meta-modal').classList.add('open');
+}
+function closeModal() {
+  document.getElementById('meta-modal').classList.remove('open');
+  editingIndex = null;
+}
+function saveMetadata() {
+  if (editingIndex === null) return;
+  files[editingIndex].metadata = {
+    title: document.getElementById('meta-title').value,
+    author: document.getElementById('meta-author').value,
+    copyright: document.getElementById('meta-copyright').value,
+  };
+  closeModal();
+  renderTable();
+  showToast('Metadata saved ✓', 'success');
+}
+document.getElementById('meta-modal').addEventListener('click', e => {
+  if (e.target === e.currentTarget) closeModal();
+});
+
+// ── TAG & DOWNLOAD ────────────────────────────────────────────────────────────
+async function tagAndDownload(format) {
+  if (files.length === 0) { showToast('Upload at least one photo', 'error'); return; }
+  if (selectedLat === null) { showToast('Please pick a location first', 'error'); return; }
+
+  showToast('Processing…');
+  setProgress(10);
+
+  try {
+    const formData = new FormData();
+    files.forEach(f => formData.append('files', f.file));
+    formData.append('lat', selectedLat);
+    formData.append('lng', selectedLng);
+    formData.append('compress', compress);
+
+    setProgress(30);
+    const tagRes = await fetch(`${API_BASE}/api/tag`, { method: 'POST', body: formData });
+    if (!tagRes.ok) throw new Error('Tagging failed');
+    const tagData = await tagRes.json();
+    setProgress(60);
+
+    for (const filename of tagData.files) {
+      let dlUrl = `${API_BASE}/api/download/${tagData.token}/${filename}`;
+
+      if (format !== 'jpg') {
+        const convRes = await fetch(`${API_BASE}/api/convert`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token: tagData.token, filename, format })
+        });
+        if (!convRes.ok) throw new Error('Conversion failed');
+        const convData = await convRes.json();
+        dlUrl = API_BASE + convData.download_url;
+      }
+
+      // Trigger download
+      const a = document.createElement('a');
+      a.href = dlUrl;
+      a.download = filename.replace('.jpg', `.${format}`);
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }
+
+    setProgress(100);
+    showToast(`${tagData.files.length} photo(s) downloaded ✓`, 'success');
+
+    // Cleanup
+    await fetch(`${API_BASE}/api/cleanup/${tagData.token}`, { method: 'DELETE' });
+    setTimeout(() => setProgress(0, true), 1500);
+
+  } catch(err) {
+    showToast('Error: ' + err.message, 'error');
+    setProgress(0, true);
+  }
+}
+
+// ── HELPERS ───────────────────────────────────────────────────────────────────
+function setProgress(pct, hide = false) {
+  const bar = document.getElementById('progress-bar');
+  const fill = document.getElementById('progress-fill');
+  bar.style.display = hide ? 'none' : 'block';
+  fill.style.width = pct + '%';
+}
+
+let toastTimer;
+function showToast(msg, type = '') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'show ' + type;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { t.className = ''; }, 3000);
+}
+</script>
+</body>
+</html>
