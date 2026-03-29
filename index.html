@@ -7,26 +7,15 @@
 <meta name="description" content="Geotag photos online free in seconds. Add GPS coordinates to images for local SEO, Google Maps & Google Business Profile. Batch upload JPG, PNG, WebP & AVIF. No signup required."/>
 <meta name="keywords" content="geotag photos online, geotag images free, add gps to photo, geotagging photos online, geotag picture online, add location to photo, geotag jpg online, photo geotagging tool, gps photo tagger, local seo images, geotag for google business profile, add exif location, geotag images for seo, free geotag tool, batch geotag photos"/>
 <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1"/>
-<meta name="author" content="InstantGeoTagger"/>
 <link rel="canonical" href="https://amfrshawon.github.io/geotagger-frontend/"/>
 <meta property="og:type" content="website"/>
-<meta property="og:url" content="https://amfrshawon.github.io/geotagger-frontend/"/>
 <meta property="og:title" content="Geotag Photos Online Free — Add GPS to Images in Seconds"/>
 <meta property="og:description" content="Free online photo geotagging tool. Add GPS coordinates to JPG, PNG & WebP images for better local SEO and Google Maps visibility. No signup needed."/>
-<meta property="og:site_name" content="InstantGeoTagger"/>
-<meta name="twitter:card" content="summary_large_image"/>
-<meta name="twitter:title" content="Geotag Photos Online Free — Add GPS to Images"/>
-<meta name="twitter:description" content="Add GPS location data to your photos in seconds. Boost local SEO & Google Maps rankings. Free, no signup, batch supported."/>
-
-<script type="application/ld+json">
-{"@context":"https://schema.org","@graph":[{"@type":"WebApplication","name":"InstantGeoTagger","url":"https://amfrshawon.github.io/geotagger-frontend/","description":"Free online tool to geotag photos and images. Add GPS coordinates to JPG, PNG, WebP and AVIF files for local SEO, Google Business Profile and Google Maps visibility.","applicationCategory":"UtilitiesApplication","operatingSystem":"Any","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"featureList":["Geotag photos online for free","Batch upload and geotag multiple images","Add GPS coordinates to JPG, PNG, WebP, AVIF","No signup or account required","Files deleted immediately after download"]},{"@type":"FAQPage","mainEntity":[{"@type":"Question","name":"How do I geotag a photo online for free?","acceptedAnswer":{"@type":"Answer","text":"Upload your photo, search for a location or click the map, then click Download. InstantGeoTagger embeds GPS data into your image EXIF metadata instantly."}},{"@type":"Question","name":"Does geotagging photos help with local SEO?","acceptedAnswer":{"@type":"Answer","text":"Yes. Businesses uploading geotagged photos to Google Business Profile consistently rank higher in local map results. GPS EXIF data provides location signals Google uses to verify your physical presence."}},{"@type":"Question","name":"Are my photos stored on your servers?","acceptedAnswer":{"@type":"Answer","text":"No. Your images are processed temporarily and deleted immediately after download. We never store, analyze or share your photos."}}]}]}
-</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"InstantGeoTagger","url":"https://amfrshawon.github.io/geotagger-frontend/","description":"Free online tool to geotag photos and images.","applicationCategory":"UtilitiesApplication","operatingSystem":"Any","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}}</script>
 
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -35,20 +24,18 @@
   --white:#fff;--off:#f5f5f7;--gray-100:#f5f5f7;--gray-200:#e8e8ed;
   --gray-300:#d2d2d7;--gray-500:#86868b;--gray-700:#424245;--gray-900:#1d1d1f;
   --border:#d2d2d7;--border-light:#e8e8ed;
+  --green:#1a8a56;--green-pale:#f0faf5;--green-border:#c3e6d5;
+  --amber:#9a6f00;--amber-pale:#fff8e6;--amber-border:#f0d88a;
   --radius:18px;--radius-sm:12px;--radius-xs:8px;
   --shadow-sm:0 1px 3px rgba(0,0,0,.08),0 2px 8px rgba(0,0,0,.05);
   --shadow-md:0 4px 16px rgba(0,0,0,.1),0 1px 3px rgba(0,0,0,.05);
   --shadow-lg:0 12px 40px rgba(0,0,0,.12),0 2px 8px rgba(0,0,0,.06);
 }
 html{scroll-behavior:smooth}
-body{
-  font-family:-apple-system,'Inter','Helvetica Neue',sans-serif;
-  background:var(--off);color:var(--gray-900);font-size:16px;line-height:1.6;
-  -webkit-font-smoothing:antialiased;
-}
+body{font-family:-apple-system,'Inter','Helvetica Neue',sans-serif;background:var(--off);color:var(--gray-900);font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased;}
 
 /* NAV */
-nav{position:sticky;top:0;z-index:200;background:rgba(255,255,255,.9);backdrop-filter:saturate(180%) blur(20px);border-bottom:1px solid var(--border-light);}
+nav{position:sticky;top:0;z-index:200;background:rgba(255,255,255,.92);backdrop-filter:saturate(180%) blur(20px);border-bottom:1px solid var(--border-light);}
 .nav-inner{max-width:1020px;margin:0 auto;padding:0 24px;display:flex;align-items:center;justify-content:space-between;height:56px;}
 .logo{font-weight:700;font-size:18px;letter-spacing:-.4px;display:flex;align-items:center;gap:10px;color:var(--gray-900);text-decoration:none;}
 .logo-mark{width:30px;height:30px;border-radius:8px;background:var(--red);display:flex;align-items:center;justify-content:center;font-size:15px;box-shadow:0 2px 8px rgba(232,52,42,.3);}
@@ -90,36 +77,30 @@ h1 .red{color:var(--red);}
 .up-p{font-size:14px;color:var(--gray-500);margin-bottom:16px;}
 .fmt-row{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;}
 .fmt{background:var(--white);border:1px solid var(--border);border-radius:6px;padding:3px 10px;font-size:11px;color:var(--gray-700);font-weight:600;letter-spacing:.04em;}
-
 .prog-bar{height:3px;background:var(--gray-200);border-radius:2px;overflow:hidden;margin-top:14px;display:none;}
 .prog-fill{height:100%;background:var(--red);transition:width .4s;width:0%;}
 
-/* SEARCH */
+/* SEARCH — plain input, Google injects its own autocomplete UI */
 .search-wrap{position:relative;margin-bottom:14px;}
 #loc-search{width:100%;padding:14px 52px 14px 18px;background:var(--off);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--gray-900);font-family:inherit;font-size:15px;outline:none;transition:border-color .2s,box-shadow .2s;}
 #loc-search:focus{border-color:var(--red);box-shadow:0 0 0 3px rgba(232,52,42,.12);}
 #loc-search::placeholder{color:var(--gray-500);}
-.s-btn{position:absolute;right:10px;top:50%;transform:translateY(-50%);background:var(--red);border:none;border-radius:8px;width:36px;height:36px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;transition:background .2s,transform .2s;}
-.s-btn:hover{background:var(--red-dark);transform:translateY(-50%) scale(1.05);}
+.s-btn{position:absolute;right:10px;top:50%;transform:translateY(-50%);background:var(--red);border:none;border-radius:8px;width:36px;height:36px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;transition:background .2s;}
+.s-btn:hover{background:var(--red-dark);}
 
-/* AUTOCOMPLETE */
-.ac-wrap{position:absolute;top:calc(100% + 6px);left:0;right:0;background:var(--white);border:1px solid var(--border);border-radius:var(--radius-sm);overflow:hidden;box-shadow:var(--shadow-lg);z-index:300;display:none;max-height:320px;overflow-y:auto;}
-.ac-wrap.open{display:block;animation:acIn .14s ease;}
-@keyframes acIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
-.ac-row{padding:11px 16px;cursor:pointer;display:flex;align-items:flex-start;gap:12px;border-bottom:1px solid var(--border-light);transition:background .12s;}
-.ac-row:last-child{border-bottom:none;}
-.ac-row:hover,.ac-row.hi{background:var(--red-pale);}
-.ac-ic{color:var(--red);font-size:14px;flex-shrink:0;padding-top:2px;}
-.ac-name{font-size:14px;font-weight:600;color:var(--gray-900);line-height:1.3;}
-.ac-sub{font-size:12px;color:var(--gray-500);margin-top:1px;}
-.ac-msg{padding:14px 18px;text-align:center;font-size:14px;color:var(--gray-500);}
+/* Override Google Autocomplete dropdown style to match our design */
+.pac-container{border-radius:var(--radius-sm) !important;border:1px solid var(--border) !important;box-shadow:var(--shadow-lg) !important;font-family:-apple-system,'Inter','Helvetica Neue',sans-serif !important;margin-top:4px !important;overflow:hidden;}
+.pac-item{padding:10px 16px !important;font-size:14px !important;cursor:pointer !important;border-top:1px solid var(--border-light) !important;}
+.pac-item:first-child{border-top:none !important;}
+.pac-item:hover{background:var(--red-pale) !important;}
+.pac-item-query{font-weight:600;color:var(--gray-900);}
+.pac-matched{color:var(--red);}
+.pac-icon{display:none !important;}
 
 /* MAP */
-#map{height:330px;border-radius:var(--radius-sm);overflow:hidden;border:1px solid var(--border);box-shadow:var(--shadow-sm);}
-
+#map{height:340px;border-radius:var(--radius-sm);overflow:hidden;border:1px solid var(--border);box-shadow:var(--shadow-sm);}
 .coord-badge{display:none;margin-top:12px;background:var(--red-pale);border:1px solid rgba(232,52,42,.2);color:var(--red);padding:9px 18px;border-radius:980px;font-size:13px;font-weight:600;font-family:monospace;}
 .coord-badge.show{display:inline-flex;align-items:center;gap:8px;animation:up .3s ease;}
-
 .manual-row{display:flex;gap:10px;margin-top:12px;}
 .manual-row input{flex:1;padding:11px 14px;background:var(--off);border:1px solid var(--border);border-radius:var(--radius-xs);color:var(--gray-900);font-family:inherit;font-size:14px;outline:none;transition:border-color .2s;}
 .manual-row input:focus{border-color:var(--red);}
@@ -127,15 +108,13 @@ h1 .red{color:var(--red);}
 .btn-set{padding:11px 18px;background:var(--off);border:1px solid var(--border);border-radius:var(--radius-xs);color:var(--gray-700);font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;transition:all .2s;white-space:nowrap;}
 .btn-set:hover{border-color:var(--red);color:var(--red);background:var(--red-pale);}
 
-/* TABLE CONTROLS */
+/* TABLE */
 .tbl-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:10px;}
 .compress-tog{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--gray-500);cursor:pointer;user-select:none;}
 .t-track{width:40px;height:24px;background:var(--gray-300);border-radius:12px;position:relative;transition:background .25s;flex-shrink:0;}
 .t-track.on{background:var(--red);}
 .t-thumb{width:18px;height:18px;background:#fff;border-radius:50%;position:absolute;top:3px;left:3px;transition:left .25s;box-shadow:0 1px 4px rgba(0,0,0,.2);}
 .t-track.on .t-thumb{left:19px;}
-
-/* TABLE */
 table{width:100%;border-collapse:collapse;font-size:14px;}
 th{padding:10px 12px;text-align:left;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--gray-500);border-bottom:1px solid var(--border-light);}
 td{padding:12px 12px;border-bottom:1px solid var(--border-light);vertical-align:middle;}
@@ -147,11 +126,11 @@ tbody tr:hover td{background:var(--off);}
 .fmeta{font-size:11px;color:var(--gray-500);margin-top:2px;}
 
 /* STATUS BADGES */
-.badge{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;white-space:nowrap;}
-.badge-coord{background:var(--red-pale);border:1px solid rgba(232,52,42,.15);color:var(--red);}
-.badge-existing{background:#fff8e6;border:1px solid rgba(200,150,0,.25);color:#9a6f00;}
-.badge-meta{background:var(--red-pale);border:1px solid rgba(232,52,42,.15);color:var(--red);}
-.badge-none{color:var(--gray-300);}
+.badge{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;white-space:nowrap;line-height:1.3;}
+.badge-new-coord{background:var(--red-pale);border:1px solid rgba(232,52,42,.2);color:var(--red);}
+.badge-has-gps{background:var(--amber-pale);border:1px solid var(--amber-border);color:var(--amber);}
+.badge-meta{background:var(--green-pale);border:1px solid var(--green-border);color:var(--green);}
+.badge-none{color:var(--gray-300);font-weight:400;}
 
 .acts{display:flex;gap:6px;}
 .icon-btn{width:32px;height:32px;border-radius:8px;background:var(--off);border:1px solid var(--border-light);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;transition:all .2s;}
@@ -159,6 +138,13 @@ tbody tr:hover td{background:var(--off);}
 .icon-btn.del:hover{background:#fff0f0;border-color:rgba(232,52,42,.4);}
 .empty-st{text-align:center;padding:44px;color:var(--gray-500);}
 .empty-ic{font-size:36px;margin-bottom:10px;}
+
+/* GPS NOTIFICATION BANNER */
+.gps-banner{display:none;background:var(--amber-pale);border:1px solid var(--amber-border);border-radius:var(--radius-xs);padding:12px 16px;margin-top:14px;font-size:13px;color:var(--amber);font-weight:500;align-items:flex-start;gap:10px;}
+.gps-banner.show{display:flex;animation:up .3s ease;}
+.gps-banner-icon{font-size:18px;flex-shrink:0;}
+.gps-banner-text{}
+.gps-banner-title{font-weight:700;margin-bottom:2px;font-size:14px;}
 
 /* BOTTOM BAR */
 .bot-bar{position:fixed;bottom:0;left:0;right:0;background:rgba(255,255,255,.92);backdrop-filter:saturate(180%) blur(20px);border-top:1px solid var(--border-light);padding:14px 24px;display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;z-index:99;}
@@ -172,10 +158,11 @@ tbody tr:hover td{background:var(--off);}
 .cnt{background:rgba(255,255,255,.25);border-radius:980px;padding:1px 8px;font-size:13px;}
 
 /* TOAST */
-#toast{position:fixed;top:68px;right:20px;background:var(--gray-900);color:#fff;padding:12px 18px;border-radius:12px;font-size:14px;font-weight:500;opacity:0;transition:all .28s;pointer-events:none;z-index:500;box-shadow:var(--shadow-lg);min-width:200px;transform:translateX(12px);}
+#toast{position:fixed;top:68px;right:20px;background:var(--gray-900);color:#fff;padding:12px 20px;border-radius:12px;font-size:14px;font-weight:500;opacity:0;transition:all .28s;pointer-events:none;z-index:999;box-shadow:var(--shadow-lg);min-width:220px;max-width:340px;transform:translateX(12px);display:flex;align-items:center;gap:10px;}
 #toast.show{opacity:1;transform:translateX(0);}
-#toast.ok{background:#1a8a56;}
+#toast.ok{background:var(--green);}
 #toast.err{background:var(--red);}
+#toast.warn{background:#c47d00;}
 
 /* MODAL */
 .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.28);backdrop-filter:blur(5px);display:none;align-items:center;justify-content:center;z-index:400;padding:16px;}
@@ -188,9 +175,9 @@ tbody tr:hover td{background:var(--off);}
 .modal input{width:100%;padding:11px 14px;background:var(--off);border:1px solid var(--border);border-radius:var(--radius-xs);color:var(--gray-900);font-family:inherit;font-size:14px;outline:none;transition:border-color .2s;}
 .modal input:focus{border-color:var(--red);}
 .modal-foot{display:flex;gap:10px;margin-top:22px;justify-content:flex-end;}
-.btn-cancel{padding:10px 18px;background:var(--off);border:1px solid var(--border);border-radius:980px;color:var(--gray-700);font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;transition:all .2s;}
+.btn-cancel{padding:10px 18px;background:var(--off);border:1px solid var(--border);border-radius:980px;color:var(--gray-700);font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;}
 .btn-cancel:hover{background:var(--gray-200);}
-.btn-save{padding:10px 22px;background:var(--red);border:none;border-radius:980px;color:#fff;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;transition:background .2s;}
+.btn-save{padding:10px 22px;background:var(--red);border:none;border-radius:980px;color:#fff;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;}
 .btn-save:hover{background:var(--red-dark);}
 
 /* SEO SECTIONS */
@@ -205,7 +192,7 @@ tbody tr:hover td{background:var(--off);}
 .how-ic{font-size:26px;margin-bottom:10px;display:block;}
 .how-card h3{font-size:16px;font-weight:700;letter-spacing:-.2px;margin-bottom:6px;}
 .how-card p{font-size:13px;color:var(--gray-500);line-height:1.6;}
-.benefit-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:14px;margin-top:28px;}
+.benefit-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;margin-top:28px;}
 .ben-card{background:var(--white);border:1px solid var(--border-light);border-radius:var(--radius-sm);padding:22px;box-shadow:var(--shadow-sm);}
 .ben-ic{font-size:22px;margin-bottom:8px;}
 .ben-card h3{font-size:15px;font-weight:700;letter-spacing:-.2px;margin-bottom:5px;}
@@ -238,7 +225,7 @@ footer strong{color:rgba(255,255,255,.85);}
 </head>
 <body>
 
-<div id="toast" role="status" aria-live="polite"></div>
+<div id="toast"><span id="toast-icon"></span><span id="toast-msg"></span></div>
 
 <!-- MODAL -->
 <div class="modal-bg" id="meta-modal">
@@ -291,6 +278,14 @@ footer strong{color:rgba(255,255,255,.85);}
       <p class="up-p">Drag multiple files for batch geotagging</p>
       <div class="fmt-row"><span class="fmt">JPG</span><span class="fmt">PNG</span><span class="fmt">WEBP</span><span class="fmt">AVIF</span></div>
     </div>
+    <!-- GPS notification banner — shown when existing GPS found -->
+    <div class="gps-banner" id="gps-banner">
+      <div class="gps-banner-icon">📍</div>
+      <div class="gps-banner-text">
+        <div class="gps-banner-title" id="gps-banner-title">GPS coordinates found!</div>
+        <div id="gps-banner-detail">One or more photos already contain GPS data. You can still re-tag them with a new location below.</div>
+      </div>
+    </div>
     <div class="prog-bar" id="prog-bar"><div class="prog-fill" id="prog-fill"></div></div>
   </div>
 
@@ -298,9 +293,9 @@ footer strong{color:rgba(255,255,255,.85);}
   <div class="card">
     <div class="card-hdr"><div class="chip">2</div><div class="card-title">Pick a location</div></div>
     <div class="search-wrap">
+      <!-- Google Places Autocomplete attaches to this input -->
       <input type="text" id="loc-search" placeholder="Type a city, address or place name…" autocomplete="off"/>
-      <button class="s-btn" onclick="doSearch()" aria-label="Search">🔍</button>
-      <div class="ac-wrap" id="ac-wrap"></div>
+      <button class="s-btn" onclick="triggerSearch()" aria-label="Search">🔍</button>
     </div>
     <div id="map"></div>
     <div class="coord-badge" id="coord-badge">📍 <span id="coord-txt"></span></div>
@@ -319,13 +314,22 @@ footer strong{color:rgba(255,255,255,.85);}
       <div style="margin-left:auto">
         <div class="compress-tog" onclick="toggleCompress()">
           <div class="t-track" id="t-track"><div class="t-thumb"></div></div>
-          Compress
+          Compress photo
         </div>
       </div>
     </div>
     <div id="empty-st" class="empty-st"><div class="empty-ic">📷</div><div>No photos yet — upload some above</div></div>
     <table id="photo-tbl" style="display:none">
-      <thead><tr><th>Thumbnail</th><th>Filename</th><th>GPS Status</th><th>New Coords</th><th>Metadata</th><th>Actions</th></tr></thead>
+      <thead>
+        <tr>
+          <th>Thumbnail</th>
+          <th>Filename</th>
+          <th>Existing GPS</th>
+          <th>New Location</th>
+          <th>Metadata</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
       <tbody id="photo-body"></tbody>
     </table>
   </div>
@@ -336,9 +340,9 @@ footer strong{color:rgba(255,255,255,.85);}
     <h2 class="sec-h2">How to geotag photos online</h2>
     <p class="sec-p">Adding GPS location data to your images takes under 60 seconds — no software, no account needed.</p>
     <div class="how-grid">
-      <div class="how-card"><div class="how-n">STEP 01</div><span class="how-ic">📤</span><h3>Upload photos</h3><p>Drag and drop JPG, PNG, WebP or AVIF. Batch upload multiple images at once.</p></div>
-      <div class="how-card"><div class="how-n">STEP 02</div><span class="how-ic">📍</span><h3>Search location</h3><p>Type any city or address — autocomplete shows suggestions instantly. Or click the map.</p></div>
-      <div class="how-card"><div class="how-n">STEP 03</div><span class="how-ic">⬇️</span><h3>Download tagged</h3><p>Download geo-tagged images as JPG, WebP or AVIF. GPS embedded in EXIF metadata.</p></div>
+      <div class="how-card"><div class="how-n">STEP 01</div><span class="how-ic">📤</span><h3>Upload photos</h3><p>Drag and drop JPG, PNG, WebP or AVIF. Existing GPS data is detected automatically.</p></div>
+      <div class="how-card"><div class="how-n">STEP 02</div><span class="how-ic">📍</span><h3>Search location</h3><p>Type any city or address — Google Places autocomplete shows suggestions instantly.</p></div>
+      <div class="how-card"><div class="how-n">STEP 03</div><span class="how-ic">⬇️</span><h3>Download tagged</h3><p>GPS is embedded into the EXIF metadata. Download as JPG, WebP or AVIF.</p></div>
     </div>
   </div>
 
@@ -360,11 +364,11 @@ footer strong{color:rgba(255,255,255,.85);}
     <div class="sec-label">FAQ</div>
     <h2 class="sec-h2">Frequently asked questions</h2>
     <div class="faq-list">
-      <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)"><span>How do I geotag a photo online for free?</span><span class="faq-arr">▼</span></div><div class="faq-a"><div class="faq-inner">Upload your photo, search for a location or click the map, then click Download. GPS data is embedded into the EXIF metadata instantly — completely free.</div></div></div>
-      <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)"><span>Does geotagging photos help with local SEO?</span><span class="faq-arr">▼</span></div><div class="faq-a"><div class="faq-inner">Yes. 2026 case studies show that businesses uploading geotagged photos to Google Business Profile consistently rank higher in local map results. GPS EXIF data provides location signals Google uses to verify your physical presence.</div></div></div>
-      <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)"><span>Are my photos stored on your servers?</span><span class="faq-arr">▼</span></div><div class="faq-a"><div class="faq-inner">No. Your images are processed temporarily and deleted immediately after you download them. We never store, analyze or share your photos.</div></div></div>
+      <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)"><span>How do I geotag a photo online for free?</span><span class="faq-arr">▼</span></div><div class="faq-a"><div class="faq-inner">Upload your photo, search for a location or click the map, then click Download Tagged. GPS data is embedded into the EXIF metadata instantly — completely free.</div></div></div>
+      <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)"><span>Does geotagging photos help with local SEO?</span><span class="faq-arr">▼</span></div><div class="faq-a"><div class="faq-inner">Yes. Businesses uploading geotagged photos to Google Business Profile consistently rank higher in local map results. GPS EXIF data provides location signals Google uses to verify your physical presence.</div></div></div>
+      <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)"><span>Are my photos stored on your servers?</span><span class="faq-arr">▼</span></div><div class="faq-a"><div class="faq-inner">No. Your images are processed temporarily and deleted immediately after download. We never store, analyze or share your photos.</div></div></div>
       <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)"><span>Can I geotag multiple photos at once?</span><span class="faq-arr">▼</span></div><div class="faq-a"><div class="faq-inner">Yes — InstantGeoTagger supports batch geotagging. Upload multiple photos and apply the same GPS coordinates to all of them in one click.</div></div></div>
-      <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)"><span>What if my photo already has GPS coordinates?</span><span class="faq-arr">▼</span></div><div class="faq-a"><div class="faq-inner">InstantGeoTagger detects existing GPS data and shows a "GPS found" badge. You can still re-tag it with new coordinates if needed — just pick a new location and download.</div></div></div>
+      <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)"><span>What if my photo already has GPS coordinates?</span><span class="faq-arr">▼</span></div><div class="faq-a"><div class="faq-inner">InstantGeoTagger automatically detects existing GPS data when you upload a photo and shows the coordinates. You can re-tag it with new coordinates by simply picking a location and downloading.</div></div></div>
     </div>
   </div>
 
@@ -387,134 +391,92 @@ footer strong{color:rgba(255,255,255,.85);}
   <p style="margin-top:14px;font-size:12px;">Files are deleted immediately after download. We never store your images.</p>
 </footer>
 
+<!-- ══════════════════════════════════════════════════════════════════
+     GOOGLE MAPS + PLACES API
+     Loading with: maps, places libraries
+══════════════════════════════════════════════════════════════════ -->
 <script>
-// ── CONFIG ───────────────────────────────────────────────────────────────────
+const GMAP_KEY = 'AIzaSyB2taGJwdwDsCMMpRq641hKyinhRc0tuMI';
 const API = window.location.hostname === 'localhost'
   ? 'http://localhost:8000'
   : 'https://instantgeotagger.up.railway.app';
 
-// ── STATE ────────────────────────────────────────────────────────────────────
-let files = [];       // { file, preview, existingGps, metadata }
+// ── STATE ─────────────────────────────────────────────────────────────────────
+let files = [];
 let selLat = null, selLng = null;
 let compress = false, editIdx = null;
-let map, marker, acTimer, acData = [], acActive = -1;
+let gMap = null, gMarker = null, autocomplete = null;
 
-// ══════════════════════════════════════════════════════════════════════════════
-// MAP SETUP
-// ══════════════════════════════════════════════════════════════════════════════
-map = L.map('map').setView([23.685, 90.356], 5);
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-  attribution: '© <a href="https://openstreetmap.org">OpenStreetMap</a>'
-}).addTo(map);
-map.on('click', e => setCoords(e.latlng.lat, e.latlng.lng));
+// ── LOAD GOOGLE MAPS ASYNC ────────────────────────────────────────────────────
+window.initGoogleMaps = function() {
+  // Initialize map
+  gMap = new google.maps.Map(document.getElementById('map'), {
+    center: { lat: 23.685, lng: 90.356 },
+    zoom: 6,
+    mapTypeControl: false,
+    streetViewControl: false,
+    fullscreenControl: false,
+    styles: [
+      { featureType: 'poi', elementType: 'labels', stylers: [{ visibility: 'off' }] }
+    ]
+  });
+
+  // Click on map to set location
+  gMap.addListener('click', e => {
+    setCoords(e.latLng.lat(), e.latLng.lng());
+  });
+
+  // Google Places Autocomplete on the search input
+  autocomplete = new google.maps.places.Autocomplete(
+    document.getElementById('loc-search'),
+    { fields: ['geometry', 'name', 'formatted_address'] }
+  );
+
+  // When user selects a suggestion
+  autocomplete.addListener('place_changed', () => {
+    const place = autocomplete.getPlace();
+    if (!place.geometry || !place.geometry.location) {
+      showToast('Could not find that location', 'err');
+      return;
+    }
+    const lat = place.geometry.location.lat();
+    const lng = place.geometry.location.lng();
+    setCoords(lat, lng);
+    showToast('📍 ' + (place.name || place.formatted_address), 'ok');
+  });
+};
+
+function triggerSearch() {
+  // If user clicks search button without picking from dropdown, geocode the text
+  const q = document.getElementById('loc-search').value.trim();
+  if (!q) return;
+  const geocoder = new google.maps.Geocoder();
+  geocoder.geocode({ address: q }, (results, status) => {
+    if (status === 'OK' && results[0]) {
+      const loc = results[0].geometry.location;
+      setCoords(loc.lat(), loc.lng());
+      showToast('📍 ' + results[0].formatted_address, 'ok');
+    } else {
+      showToast('Location not found', 'err');
+    }
+  });
+}
 
 function setCoords(lat, lng) {
   selLat = lat; selLng = lng;
   document.getElementById('coord-txt').textContent =
     `${lat.toFixed(6)}° ${lat >= 0 ? 'N' : 'S'},  ${lng.toFixed(6)}° ${lng >= 0 ? 'E' : 'W'}`;
   document.getElementById('coord-badge').classList.add('show');
-  if (marker) map.removeLayer(marker);
-  marker = L.marker([lat, lng]).addTo(map);
-  map.setView([lat, lng], Math.max(map.getZoom(), 13));
+
+  if (gMarker) gMarker.setMap(null);
+  gMarker = new google.maps.Marker({
+    position: { lat, lng },
+    map: gMap,
+    animation: google.maps.Animation.DROP
+  });
+  gMap.panTo({ lat, lng });
+  if (gMap.getZoom() < 13) gMap.setZoom(13);
   renderTable();
-}
-
-// ══════════════════════════════════════════════════════════════════════════════
-// AUTOCOMPLETE — uses Photon API (works without CORS issues, no API key needed)
-// ══════════════════════════════════════════════════════════════════════════════
-const srch = document.getElementById('loc-search');
-const acWrap = document.getElementById('ac-wrap');
-
-srch.addEventListener('input', () => {
-  clearTimeout(acTimer);
-  const q = srch.value.trim();
-  if (q.length < 2) { closeAC(); return; }
-  acWrap.innerHTML = '<div class="ac-msg">Searching…</div>';
-  acWrap.classList.add('open');
-  // Debounce 350ms
-  acTimer = setTimeout(() => fetchAC(q), 350);
-});
-
-srch.addEventListener('keydown', e => {
-  if (!acWrap.classList.contains('open')) return;
-  if (e.key === 'ArrowDown') { acActive = Math.min(acActive + 1, acData.length - 1); hlAC(); e.preventDefault(); }
-  else if (e.key === 'ArrowUp') { acActive = Math.max(acActive - 1, -1); hlAC(); e.preventDefault(); }
-  else if (e.key === 'Enter') {
-    if (acActive >= 0 && acData[acActive]) pickAC(acData[acActive]);
-    else doSearch();
-    e.preventDefault();
-  }
-  else if (e.key === 'Escape') closeAC();
-});
-
-document.addEventListener('click', e => { if (!e.target.closest('.search-wrap')) closeAC(); });
-
-// Photon geocoding API — free, no API key, no CORS issues
-async function fetchAC(q) {
-  try {
-    const url = `https://photon.komoot.io/api/?q=${encodeURIComponent(q)}&limit=6&lang=en`;
-    const r = await fetch(url);
-    if (!r.ok) throw new Error('fetch failed');
-    const geo = await r.json();
-    const features = geo.features || [];
-    acData = features;
-    acActive = -1;
-
-    if (!features.length) {
-      acWrap.innerHTML = '<div class="ac-msg">No results found</div>';
-      return;
-    }
-
-    acWrap.innerHTML = features.map((f, i) => {
-      const p = f.properties;
-      const name = p.name || p.city || p.state || 'Unknown';
-      const parts = [p.city, p.state, p.country].filter(Boolean);
-      // Remove duplicate if name === city
-      const sub = parts.filter(x => x !== name).join(', ');
-      return `<div class="ac-row" data-i="${i}">
-        <span class="ac-ic">📍</span>
-        <div>
-          <div class="ac-name">${name}</div>
-          ${sub ? `<div class="ac-sub">${sub}</div>` : ''}
-        </div>
-      </div>`;
-    }).join('');
-
-    acWrap.querySelectorAll('.ac-row').forEach(el => {
-      el.addEventListener('click', () => pickAC(features[+el.dataset.i]));
-      el.addEventListener('mouseenter', () => { acActive = +el.dataset.i; hlAC(); });
-    });
-  } catch (err) {
-    acWrap.innerHTML = '<div class="ac-msg">Search failed — try typing more</div>';
-  }
-}
-
-function hlAC() {
-  acWrap.querySelectorAll('.ac-row').forEach((el, i) => el.classList.toggle('hi', i === acActive));
-}
-
-function pickAC(feature) {
-  const p = feature.properties;
-  const [lng, lat] = feature.geometry.coordinates;
-  srch.value = p.name || p.city || '';
-  closeAC();
-  setCoords(lat, lng);
-  showToast('Location set ✓', 'ok');
-}
-
-function closeAC() { acWrap.classList.remove('open'); acActive = -1; }
-
-async function doSearch() {
-  const q = srch.value.trim();
-  if (!q) return;
-  closeAC();
-  showToast('Searching…');
-  try {
-    const r = await fetch(`https://photon.komoot.io/api/?q=${encodeURIComponent(q)}&limit=1&lang=en`);
-    const geo = await r.json();
-    if (!geo.features || !geo.features.length) { showToast('Location not found', 'err'); return; }
-    pickAC(geo.features[0]);
-  } catch { showToast('Search failed', 'err'); }
 }
 
 function setManual() {
@@ -526,102 +488,62 @@ function setManual() {
   showToast('Coordinates set ✓', 'ok');
 }
 
-// ══════════════════════════════════════════════════════════════════════════════
-// EXIF GPS READER — detects existing GPS in uploaded JPEG
-// Uses DataView to parse EXIF without any library
-// ══════════════════════════════════════════════════════════════════════════════
+// ── EXIF GPS READER — reads existing GPS from JPEG without any library ────────
 function readExifGps(buffer) {
   try {
     const view = new DataView(buffer);
-    // Check JPEG SOI
-    if (view.getUint16(0) !== 0xFFD8) return null;
-
+    if (view.getUint16(0) !== 0xFFD8) return null; // Not JPEG
     let offset = 2;
-    while (offset < view.byteLength - 2) {
+    while (offset < view.byteLength - 4) {
       const marker = view.getUint16(offset);
       offset += 2;
-      if (marker === 0xFFE1) { // APP1 = EXIF
+      if (marker === 0xFFE1) { // APP1 segment
         const segLen = view.getUint16(offset);
-        // Check "Exif\0\0" header
-        const exifHeader = String.fromCharCode(
-          view.getUint8(offset + 2), view.getUint8(offset + 3),
-          view.getUint8(offset + 4), view.getUint8(offset + 5)
+        const hdr = String.fromCharCode(
+          view.getUint8(offset+2), view.getUint8(offset+3),
+          view.getUint8(offset+4), view.getUint8(offset+5)
         );
-        if (exifHeader !== 'Exif') { offset += segLen; continue; }
-
-        const tiffStart = offset + 8;
-        const endian = view.getUint16(tiffStart);
-        const le = endian === 0x4949; // little-endian
-
-        function r16(o) { return le ? view.getUint16(tiffStart + o, true) : view.getUint16(tiffStart + o, false); }
-        function r32(o) { return le ? view.getUint32(tiffStart + o, true) : view.getUint32(tiffStart + o, false); }
-
-        // IFD0
+        if (hdr !== 'Exif') { offset += segLen; continue; }
+        const tiff = offset + 8;
+        const le = view.getUint16(tiff) === 0x4949;
+        const r16 = o => le ? view.getUint16(tiff+o,true) : view.getUint16(tiff+o,false);
+        const r32 = o => le ? view.getUint32(tiff+o,true) : view.getUint32(tiff+o,false);
         const ifd0 = r32(4);
-        const ifd0Count = r16(ifd0);
-        let gpsIfdOffset = null;
-
-        for (let i = 0; i < ifd0Count; i++) {
-          const tag = r16(ifd0 + 2 + i * 12);
-          if (tag === 0x8825) { // GPSInfo IFD pointer
-            gpsIfdOffset = r32(ifd0 + 2 + i * 12 + 8);
-          }
+        const n0 = r16(ifd0);
+        let gpsOff = null;
+        for (let i = 0; i < n0; i++) {
+          if (r16(ifd0+2+i*12) === 0x8825) gpsOff = r32(ifd0+2+i*12+8);
         }
-
-        if (gpsIfdOffset === null) return null;
-
-        const gpsCount = r16(gpsIfdOffset);
-        let latRef = null, lat = null, lngRef = null, lng = null;
-
-        for (let i = 0; i < gpsCount; i++) {
-          const base = gpsIfdOffset + 2 + i * 12;
-          const tag = r16(base);
-          const type = r16(base + 2);
-          const count = r32(base + 4);
-          const valOffset = base + 8;
-
-          function readRational(off) {
-            const num = r32(off);
-            const den = r32(off + 4);
-            return den === 0 ? 0 : num / den;
-          }
-
-          if (tag === 1) { // GPSLatitudeRef
-            latRef = String.fromCharCode(view.getUint8(tiffStart + valOffset));
-          } else if (tag === 2) { // GPSLatitude
-            const ptr = r32(valOffset);
-            const deg = readRational(ptr);
-            const min = readRational(ptr + 8);
-            const sec = readRational(ptr + 16);
-            lat = deg + min / 60 + sec / 3600;
-          } else if (tag === 3) { // GPSLongitudeRef
-            lngRef = String.fromCharCode(view.getUint8(tiffStart + valOffset));
-          } else if (tag === 4) { // GPSLongitude
-            const ptr = r32(valOffset);
-            const deg = readRational(ptr);
-            const min = readRational(ptr + 8);
-            const sec = readRational(ptr + 16);
-            lng = deg + min / 60 + sec / 3600;
-          }
+        if (!gpsOff) return null;
+        const ng = r16(gpsOff);
+        let latRef='N', lat=null, lngRef='E', lng=null;
+        const rat = (p) => { const n=r32(p), d=r32(p+4); return d?n/d:0; };
+        for (let i = 0; i < ng; i++) {
+          const b = gpsOff+2+i*12;
+          const tag = r16(b);
+          const vOff = b+8;
+          if (tag===1) latRef = String.fromCharCode(view.getUint8(tiff+vOff));
+          else if (tag===2){ const p=r32(vOff); lat=rat(p)+rat(p+8)/60+rat(p+16)/3600; }
+          else if (tag===3) lngRef = String.fromCharCode(view.getUint8(tiff+vOff));
+          else if (tag===4){ const p=r32(vOff); lng=rat(p)+rat(p+8)/60+rat(p+16)/3600; }
         }
-
-        if (lat !== null && lng !== null) {
-          if (latRef === 'S') lat = -lat;
-          if (lngRef === 'W') lng = -lng;
-          return { lat: parseFloat(lat.toFixed(6)), lng: parseFloat(lng.toFixed(6)) };
+        if (lat!==null && lng!==null) {
+          return {
+            lat: parseFloat((latRef==='S'?-lat:lat).toFixed(6)),
+            lng: parseFloat((lngRef==='W'?-lng:lng).toFixed(6))
+          };
         }
         return null;
       } else if ((marker & 0xFF00) === 0xFF00) {
+        if (offset + 2 > view.byteLength) break;
         offset += view.getUint16(offset);
       } else break;
     }
-  } catch (e) {}
+  } catch(e) {}
   return null;
 }
 
-// ══════════════════════════════════════════════════════════════════════════════
-// FILE UPLOAD
-// ══════════════════════════════════════════════════════════════════════════════
+// ── FILE UPLOAD ────────────────────────────────────────────────────────────────
 const dz = document.getElementById('drop-zone');
 const fi = document.getElementById('file-input');
 
@@ -631,82 +553,97 @@ dz.addEventListener('dragleave', () => dz.classList.remove('dragover'));
 dz.addEventListener('drop', e => { e.preventDefault(); dz.classList.remove('dragover'); loadFiles(e.dataTransfer.files); });
 
 function loadFiles(list) {
+  let newGpsCount = 0;
+  let newGpsNames = [];
+  let pending = 0;
+
   Array.from(list).forEach(file => {
     if (!file.type.startsWith('image/')) return;
-
+    pending++;
     const reader = new FileReader();
     reader.onload = ev => {
       const buf = ev.target.result;
-      // Try to read existing GPS from JPEG EXIF
       let existingGps = null;
-      if (file.type === 'image/jpeg' || file.type === 'image/jpg') {
+      if (file.type === 'image/jpeg' || file.name.toLowerCase().endsWith('.jpg') || file.name.toLowerCase().endsWith('.jpeg')) {
         existingGps = readExifGps(buf);
       }
-
-      // Convert ArrayBuffer to DataURL for preview
       const blob = new Blob([buf], { type: file.type });
-      const previewUrl = URL.createObjectURL(blob);
-
-      files.push({
-        file,
-        preview: previewUrl,
-        existingGps,   // null or { lat, lng }
-        metadata: { title: '', author: '', copyright: '' }
-      });
-      renderTable();
-      updateCount();
+      const preview = URL.createObjectURL(blob);
+      files.push({ file, preview, existingGps, metadata: { title:'', author:'', copyright:'' } });
 
       if (existingGps) {
-        showToast(`📍 GPS found in ${file.name}`, 'ok');
+        newGpsCount++;
+        newGpsNames.push(file.name);
+      }
+
+      pending--;
+      if (pending === 0) {
+        renderTable();
+        updateCount();
+        updateGpsBanner();
+        // Show GPS notification if any files had existing GPS
+        if (newGpsCount > 0) {
+          const names = newGpsNames.slice(0, 2).join(', ') + (newGpsNames.length > 2 ? ` +${newGpsNames.length-2} more` : '');
+          showToast(`📍 GPS found in ${newGpsCount} photo${newGpsCount>1?'s':''}`, 'warn');
+        }
       }
     };
-    reader.readAsArrayBuffer(file);  // Read as buffer for EXIF parsing + preview
+    reader.readAsArrayBuffer(file);
   });
 }
 
-// ══════════════════════════════════════════════════════════════════════════════
-// TABLE RENDER
-// ══════════════════════════════════════════════════════════════════════════════
+function updateGpsBanner() {
+  const gpsFiles = files.filter(f => f.existingGps);
+  const banner = document.getElementById('gps-banner');
+  if (gpsFiles.length > 0) {
+    document.getElementById('gps-banner-title').textContent =
+      `GPS coordinates found in ${gpsFiles.length} photo${gpsFiles.length>1?'s':''}!`;
+    const coords = gpsFiles.slice(0,2).map(f =>
+      `${f.file.name}: ${f.existingGps.lat}, ${f.existingGps.lng}`
+    ).join(' · ');
+    document.getElementById('gps-banner-detail').textContent =
+      coords + (gpsFiles.length > 2 ? ` and ${gpsFiles.length-2} more.` : '') +
+      ' You can re-tag with a new location below.';
+    banner.classList.add('show');
+  } else {
+    banner.classList.remove('show');
+  }
+}
+
+// ── TABLE RENDER ───────────────────────────────────────────────────────────────
 function renderTable() {
   const empty = document.getElementById('empty-st');
   const tbl = document.getElementById('photo-tbl');
   const body = document.getElementById('photo-body');
-  if (!files.length) { empty.style.display = 'block'; tbl.style.display = 'none'; return; }
-  empty.style.display = 'none'; tbl.style.display = 'table';
+  if (!files.length) { empty.style.display='block'; tbl.style.display='none'; return; }
+  empty.style.display='none'; tbl.style.display='table';
 
   body.innerHTML = files.map((f, i) => {
-    // GPS Status column
-    let gpsStatus = '';
-    if (f.existingGps) {
-      gpsStatus = `<span class="badge badge-existing">📍 GPS found · ${f.existingGps.lat.toFixed(4)}, ${f.existingGps.lng.toFixed(4)}</span>`;
-    } else {
-      gpsStatus = `<span class="badge badge-none">— no GPS</span>`;
-    }
+    const gpsBadge = f.existingGps
+      ? `<span class="badge badge-has-gps">📍 ${f.existingGps.lat}, ${f.existingGps.lng}</span>`
+      : `<span class="badge badge-none">None</span>`;
 
-    // New coords column
     const newCoord = selLat !== null
-      ? `<span class="badge badge-coord">${selLat.toFixed(4)}, ${selLng.toFixed(4)}</span>`
-      : `<span class="badge badge-none">—</span>`;
+      ? `<span class="badge badge-new-coord">→ ${selLat.toFixed(4)}, ${selLng.toFixed(4)}</span>`
+      : `<span class="badge badge-none">Not set</span>`;
 
-    const metaOk = f.metadata.title || f.metadata.author
+    const metaBadge = f.metadata.title || f.metadata.author
       ? `<span class="badge badge-meta">✓ set</span>`
       : `<span class="badge badge-none">—</span>`;
 
     return `<tr>
-      <td><img class="thumb" src="${f.preview}" alt="Photo ${i + 1}"/></td>
+      <td><img class="thumb" src="${f.preview}" alt="Photo ${i+1}"/></td>
       <td>
         <div class="fname">${f.file.name}</div>
-        <div class="fmeta">${(f.file.size / 1024).toFixed(0)} KB · ${(f.file.type.split('/')[1] || '').toUpperCase()}</div>
+        <div class="fmeta">${(f.file.size/1024).toFixed(0)} KB · ${(f.file.type.split('/')[1]||'').toUpperCase()}</div>
       </td>
-      <td>${gpsStatus}</td>
+      <td>${gpsBadge}</td>
       <td>${newCoord}</td>
-      <td>${metaOk}</td>
-      <td>
-        <div class="acts">
-          <button class="icon-btn" onclick="openModal(${i})" title="Edit metadata">✏️</button>
-          <button class="icon-btn del" onclick="removeFile(${i})" title="Remove">🗑️</button>
-        </div>
-      </td>
+      <td>${metaBadge}</td>
+      <td><div class="acts">
+        <button class="icon-btn" onclick="openModal(${i})" title="Edit metadata">✏️</button>
+        <button class="icon-btn del" onclick="removeFile(${i})" title="Remove">🗑️</button>
+      </div></td>
     </tr>`;
   }).join('');
 }
@@ -714,18 +651,15 @@ function renderTable() {
 function removeFile(i) {
   if (files[i].preview.startsWith('blob:')) URL.revokeObjectURL(files[i].preview);
   files.splice(i, 1);
-  renderTable(); updateCount();
+  renderTable(); updateCount(); updateGpsBanner();
 }
 function updateCount() { document.getElementById('cnt').textContent = files.length; }
-
 function toggleCompress() {
   compress = !compress;
   document.getElementById('t-track').classList.toggle('on', compress);
 }
 
-// ══════════════════════════════════════════════════════════════════════════════
-// METADATA MODAL
-// ══════════════════════════════════════════════════════════════════════════════
+// ── METADATA MODAL ─────────────────────────────────────────────────────────────
 function openModal(i) {
   editIdx = i;
   const m = files[i].metadata;
@@ -733,7 +667,7 @@ function openModal(i) {
   document.getElementById('meta-author').value = m.author;
   document.getElementById('meta-copyright').value = m.copyright;
   document.getElementById('meta-modal').classList.add('open');
-  setTimeout(() => document.getElementById('meta-title').focus(), 100);
+  setTimeout(() => document.getElementById('meta-title').focus(), 80);
 }
 function closeModal() { document.getElementById('meta-modal').classList.remove('open'); editIdx = null; }
 function saveMetadata() {
@@ -745,18 +679,16 @@ function saveMetadata() {
   };
   closeModal(); renderTable(); showToast('Metadata saved ✓', 'ok');
 }
-document.getElementById('meta-modal').addEventListener('click', e => { if (e.target === e.currentTarget) closeModal(); });
+document.getElementById('meta-modal').addEventListener('click', e => { if (e.target===e.currentTarget) closeModal(); });
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
 
-// ══════════════════════════════════════════════════════════════════════════════
-// TAG & DOWNLOAD
-// ══════════════════════════════════════════════════════════════════════════════
+// ── TAG & DOWNLOAD ─────────────────────────────────────────────────────────────
 async function tagAndDownload(format) {
   if (!files.length) { showToast('Upload at least one photo first', 'err'); return; }
   if (selLat === null) { showToast('Please pick a location on the map first', 'err'); return; }
 
-  showToast('Processing your photos…');
-  setProgress(15);
+  showToast('Processing photos…', '');
+  setProgress(10);
 
   try {
     const fd = new FormData();
@@ -765,14 +697,14 @@ async function tagAndDownload(format) {
     fd.append('lng', selLng);
     fd.append('compress', compress);
 
-    setProgress(35);
+    setProgress(30);
     const tr = await fetch(`${API}/api/tag`, { method: 'POST', body: fd });
     if (!tr.ok) {
-      const err = await tr.text();
-      throw new Error(`Backend error: ${err}`);
+      const errText = await tr.text();
+      throw new Error('Backend: ' + errText);
     }
     const td = await tr.json();
-    setProgress(65);
+    setProgress(60);
 
     for (const filename of td.files) {
       let dlUrl = `${API}/api/download/${td.token}/${filename}`;
@@ -783,27 +715,22 @@ async function tagAndDownload(format) {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ token: td.token, filename, format })
         });
-        if (!cr.ok) throw new Error('Format conversion failed');
+        if (!cr.ok) throw new Error('Conversion failed');
         const cd = await cr.json();
         dlUrl = API + cd.download_url;
       }
 
-      // Trigger download
       const a = document.createElement('a');
       a.href = dlUrl;
       a.download = filename.replace('.jpg', `.${format}`);
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
-
-      // Small delay between multiple files
-      await new Promise(r => setTimeout(r, 300));
+      await new Promise(r => setTimeout(r, 400));
     }
 
     setProgress(100);
-    showToast(`${td.files.length} photo(s) tagged & downloaded ✓`, 'ok');
-
-    // Cleanup server temp files
+    showToast(`✓ ${td.files.length} photo${td.files.length>1?'s':''} geotagged & downloaded!`, 'ok');
     fetch(`${API}/api/cleanup/${td.token}`, { method: 'DELETE' });
     setTimeout(() => setProgress(0, true), 1800);
 
@@ -814,9 +741,7 @@ async function tagAndDownload(format) {
   }
 }
 
-// ══════════════════════════════════════════════════════════════════════════════
-// HELPERS
-// ══════════════════════════════════════════════════════════════════════════════
+// ── HELPERS ────────────────────────────────────────────────────────────────────
 function setProgress(pct, hide = false) {
   document.getElementById('prog-bar').style.display = hide ? 'none' : 'block';
   document.getElementById('prog-fill').style.width = pct + '%';
@@ -825,10 +750,12 @@ function setProgress(pct, hide = false) {
 let toastT;
 function showToast(msg, type = '') {
   const t = document.getElementById('toast');
-  t.textContent = msg;
+  const icon = document.getElementById('toast-icon');
+  const msgEl = document.getElementById('toast-msg');
+  msgEl.textContent = msg;
   t.className = 'show ' + type;
   clearTimeout(toastT);
-  toastT = setTimeout(() => { t.className = ''; }, 3500);
+  toastT = setTimeout(() => { t.className = ''; }, 4000);
 }
 
 function toggleFaq(btn) {
@@ -838,5 +765,9 @@ function toggleFaq(btn) {
   if (!wasOpen) item.classList.add('open');
 }
 </script>
+
+<!-- Load Google Maps with Places library — callback fires initGoogleMaps() -->
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB2taGJwdwDsCMMpRq641hKyinhRc0tuMI&libraries=places&callback=initGoogleMaps" async defer></script>
+
 </body>
 </html>
