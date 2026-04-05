@@ -16,6 +16,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
 
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -80,7 +81,7 @@ h1 .red{color:var(--red);}
 .prog-bar{height:3px;background:var(--gray-200);border-radius:2px;overflow:hidden;margin-top:14px;display:none;}
 .prog-fill{height:100%;background:var(--red);transition:width .4s;width:0%;}
 
-/* SEARCH — plain input, Google injects its own autocomplete UI */
+/* SEARCH */
 .search-wrap{position:relative;margin-bottom:14px;}
 #loc-search{width:100%;padding:14px 52px 14px 18px;background:var(--off);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--gray-900);font-family:inherit;font-size:15px;outline:none;transition:border-color .2s,box-shadow .2s;}
 #loc-search:focus{border-color:var(--red);box-shadow:0 0 0 3px rgba(232,52,42,.12);}
@@ -88,14 +89,18 @@ h1 .red{color:var(--red);}
 .s-btn{position:absolute;right:10px;top:50%;transform:translateY(-50%);background:var(--red);border:none;border-radius:8px;width:36px;height:36px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;transition:background .2s;}
 .s-btn:hover{background:var(--red-dark);}
 
-/* Override Google Autocomplete dropdown style to match our design */
-.pac-container{border-radius:var(--radius-sm) !important;border:1px solid var(--border) !important;box-shadow:var(--shadow-lg) !important;font-family:-apple-system,'Inter','Helvetica Neue',sans-serif !important;margin-top:4px !important;overflow:hidden;}
-.pac-item{padding:10px 16px !important;font-size:14px !important;cursor:pointer !important;border-top:1px solid var(--border-light) !important;}
-.pac-item:first-child{border-top:none !important;}
-.pac-item:hover{background:var(--red-pale) !important;}
-.pac-item-query{font-weight:600;color:var(--gray-900);}
-.pac-matched{color:var(--red);}
-.pac-icon{display:none !important;}
+/* Search dropdown */
+.search-dropdown{position:absolute;top:100%;left:0;right:0;background:var(--white);border:1px solid var(--border);border-radius:var(--radius-sm);box-shadow:var(--shadow-lg);margin-top:4px;overflow:hidden;z-index:300;display:none;max-height:280px;overflow-y:auto;}
+.search-dropdown.show{display:block;}
+.search-item{padding:10px 16px;font-size:14px;cursor:pointer;border-top:1px solid var(--border-light);transition:background .15s;}
+.search-item:first-child{border-top:none;}
+.search-item:hover,.search-item.active{background:var(--red-pale);}
+.search-item-name{font-weight:600;color:var(--gray-900);}
+.search-item-addr{font-size:12px;color:var(--gray-500);margin-top:2px;}
+.search-loading{padding:14px 16px;text-align:center;font-size:13px;color:var(--gray-500);}
+
+/* Leaflet overrides */
+.leaflet-control-zoom a{color:var(--gray-900) !important;}
 
 /* MAP */
 #map{height:340px;border-radius:var(--radius-sm);overflow:hidden;border:1px solid var(--border);box-shadow:var(--shadow-sm);}
@@ -293,9 +298,9 @@ footer strong{color:rgba(255,255,255,.85);}
   <div class="card">
     <div class="card-hdr"><div class="chip">2</div><div class="card-title">Pick a location</div></div>
     <div class="search-wrap">
-      <!-- Google Places Autocomplete attaches to this input -->
       <input type="text" id="loc-search" placeholder="Type a city, address or place name…" autocomplete="off"/>
       <button class="s-btn" onclick="triggerSearch()" aria-label="Search">🔍</button>
+      <div class="search-dropdown" id="search-dropdown"></div>
     </div>
     <div id="map"></div>
     <div class="coord-badge" id="coord-badge">📍 <span id="coord-txt"></span></div>
@@ -391,12 +396,9 @@ footer strong{color:rgba(255,255,255,.85);}
   <p style="margin-top:14px;font-size:12px;">Files are deleted immediately after download. We never store your images.</p>
 </footer>
 
-<!-- ══════════════════════════════════════════════════════════════════
-     GOOGLE MAPS + PLACES API
-     Loading with: maps, places libraries
-══════════════════════════════════════════════════════════════════ -->
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 <script>
-const GMAP_KEY = 'AIzaSyB2taGJwdwDsCMMpRq641hKyinhRc0tuMI';
 const API = window.location.hostname === 'localhost'
   ? 'http://localhost:8000'
   : 'https://instantgeotagger.up.railway.app';
@@ -405,61 +407,143 @@ const API = window.location.hostname === 'localhost'
 let files = [];
 let selLat = null, selLng = null;
 let compress = false, editIdx = null;
-let gMap = null, gMarker = null, autocomplete = null;
+let leafletMap = null, leafletMarker = null;
+let searchTimeout = null;
+let searchActiveIdx = -1;
 
-// ── LOAD GOOGLE MAPS ASYNC ────────────────────────────────────────────────────
-window.initGoogleMaps = function() {
-  // Initialize map
-  gMap = new google.maps.Map(document.getElementById('map'), {
-    center: { lat: 23.685, lng: 90.356 },
+// ── INIT LEAFLET MAP ──────────────────────────────────────────────────────────
+(function initMap() {
+  leafletMap = L.map('map', {
+    center: [23.685, 90.356],
     zoom: 6,
-    mapTypeControl: false,
-    streetViewControl: false,
-    fullscreenControl: false,
-    styles: [
-      { featureType: 'poi', elementType: 'labels', stylers: [{ visibility: 'off' }] }
-    ]
+    zoomControl: true
   });
+
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+    maxZoom: 19
+  }).addTo(leafletMap);
 
   // Click on map to set location
-  gMap.addListener('click', e => {
-    setCoords(e.latLng.lat(), e.latLng.lng());
+  leafletMap.on('click', function(e) {
+    setCoords(e.latlng.lat, e.latlng.lng);
   });
+})();
 
-  // Google Places Autocomplete on the search input
-  autocomplete = new google.maps.places.Autocomplete(
-    document.getElementById('loc-search'),
-    { fields: ['geometry', 'name', 'formatted_address'] }
-  );
+// ── SEARCH WITH NOMINATIM (OpenStreetMap Geocoding) ───────────────────────────
+const searchInput = document.getElementById('loc-search');
+const searchDropdown = document.getElementById('search-dropdown');
 
-  // When user selects a suggestion
-  autocomplete.addListener('place_changed', () => {
-    const place = autocomplete.getPlace();
-    if (!place.geometry || !place.geometry.location) {
-      showToast('Could not find that location', 'err');
+searchInput.addEventListener('input', function() {
+  clearTimeout(searchTimeout);
+  const q = this.value.trim();
+  if (q.length < 2) { hideDropdown(); return; }
+  searchDropdown.innerHTML = '<div class="search-loading">Searching...</div>';
+  searchDropdown.classList.add('show');
+  searchActiveIdx = -1;
+  searchTimeout = setTimeout(() => nominatimSearch(q), 300);
+});
+
+searchInput.addEventListener('keydown', function(e) {
+  const items = searchDropdown.querySelectorAll('.search-item');
+  if (!items.length) {
+    if (e.key === 'Enter') { e.preventDefault(); triggerSearch(); }
+    return;
+  }
+  if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    searchActiveIdx = Math.min(searchActiveIdx + 1, items.length - 1);
+    updateActiveItem(items);
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    searchActiveIdx = Math.max(searchActiveIdx - 1, 0);
+    updateActiveItem(items);
+  } else if (e.key === 'Enter') {
+    e.preventDefault();
+    if (searchActiveIdx >= 0 && items[searchActiveIdx]) {
+      items[searchActiveIdx].click();
+    } else {
+      triggerSearch();
+    }
+  } else if (e.key === 'Escape') {
+    hideDropdown();
+  }
+});
+
+function updateActiveItem(items) {
+  items.forEach((el, i) => el.classList.toggle('active', i === searchActiveIdx));
+  if (items[searchActiveIdx]) items[searchActiveIdx].scrollIntoView({ block: 'nearest' });
+}
+
+// Close dropdown when clicking outside
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('.search-wrap')) hideDropdown();
+});
+
+function hideDropdown() {
+  searchDropdown.classList.remove('show');
+  searchDropdown.innerHTML = '';
+  searchActiveIdx = -1;
+}
+
+async function nominatimSearch(query) {
+  try {
+    const resp = await fetch(
+      `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=6&addressdetails=1`,
+      { headers: { 'Accept-Language': 'en' } }
+    );
+    const results = await resp.json();
+    if (!results.length) {
+      searchDropdown.innerHTML = '<div class="search-loading">No results found</div>';
       return;
     }
-    const lat = place.geometry.location.lat();
-    const lng = place.geometry.location.lng();
-    setCoords(lat, lng);
-    showToast('📍 ' + (place.name || place.formatted_address), 'ok');
-  });
-};
+    searchDropdown.innerHTML = results.map((r, i) => `
+      <div class="search-item" data-lat="${r.lat}" data-lng="${r.lon}" data-name="${r.display_name.replace(/"/g, '&quot;')}">
+        <div class="search-item-name">${r.display_name.split(',')[0]}</div>
+        <div class="search-item-addr">${r.display_name}</div>
+      </div>
+    `).join('');
+    searchDropdown.querySelectorAll('.search-item').forEach(item => {
+      item.addEventListener('click', function() {
+        const lat = parseFloat(this.dataset.lat);
+        const lng = parseFloat(this.dataset.lng);
+        const name = this.dataset.name;
+        searchInput.value = name;
+        hideDropdown();
+        setCoords(lat, lng);
+        showToast('📍 ' + name.split(',')[0], 'ok');
+      });
+    });
+  } catch (err) {
+    searchDropdown.innerHTML = '<div class="search-loading">Search failed — try again</div>';
+  }
+}
 
 function triggerSearch() {
-  // If user clicks search button without picking from dropdown, geocode the text
-  const q = document.getElementById('loc-search').value.trim();
+  const q = searchInput.value.trim();
   if (!q) return;
-  const geocoder = new google.maps.Geocoder();
-  geocoder.geocode({ address: q }, (results, status) => {
-    if (status === 'OK' && results[0]) {
-      const loc = results[0].geometry.location;
-      setCoords(loc.lat(), loc.lng());
-      showToast('📍 ' + results[0].formatted_address, 'ok');
+  hideDropdown();
+  nominatimGeocode(q);
+}
+
+async function nominatimGeocode(query) {
+  try {
+    const resp = await fetch(
+      `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1`,
+      { headers: { 'Accept-Language': 'en' } }
+    );
+    const results = await resp.json();
+    if (results.length) {
+      const r = results[0];
+      setCoords(parseFloat(r.lat), parseFloat(r.lon));
+      searchInput.value = r.display_name;
+      showToast('📍 ' + r.display_name.split(',')[0], 'ok');
     } else {
       showToast('Location not found', 'err');
     }
-  });
+  } catch(err) {
+    showToast('Search failed — check your connection', 'err');
+  }
 }
 
 function setCoords(lat, lng) {
@@ -468,14 +552,9 @@ function setCoords(lat, lng) {
     `${lat.toFixed(6)}° ${lat >= 0 ? 'N' : 'S'},  ${lng.toFixed(6)}° ${lng >= 0 ? 'E' : 'W'}`;
   document.getElementById('coord-badge').classList.add('show');
 
-  if (gMarker) gMarker.setMap(null);
-  gMarker = new google.maps.Marker({
-    position: { lat, lng },
-    map: gMap,
-    animation: google.maps.Animation.DROP
-  });
-  gMap.panTo({ lat, lng });
-  if (gMap.getZoom() < 13) gMap.setZoom(13);
+  if (leafletMarker) leafletMap.removeLayer(leafletMarker);
+  leafletMarker = L.marker([lat, lng]).addTo(leafletMap);
+  leafletMap.setView([lat, lng], Math.max(leafletMap.getZoom(), 13));
   renderTable();
 }
 
@@ -581,10 +660,10 @@ function loadFiles(list) {
         renderTable();
         updateCount();
         updateGpsBanner();
-        // Show GPS notification if any files had existing GPS
+        // Show clear "already tagged" notification
         if (newGpsCount > 0) {
           const names = newGpsNames.slice(0, 2).join(', ') + (newGpsNames.length > 2 ? ` +${newGpsNames.length-2} more` : '');
-          showToast(`📍 GPS found in ${newGpsCount} photo${newGpsCount>1?'s':''}`, 'warn');
+          showToast(`Already tagged found! ${newGpsCount} photo${newGpsCount>1?'s already have':' already has'} GPS data`, 'warn');
         }
       }
     };
@@ -597,13 +676,13 @@ function updateGpsBanner() {
   const banner = document.getElementById('gps-banner');
   if (gpsFiles.length > 0) {
     document.getElementById('gps-banner-title').textContent =
-      `GPS coordinates found in ${gpsFiles.length} photo${gpsFiles.length>1?'s':''}!`;
-    const coords = gpsFiles.slice(0,2).map(f =>
+      `Already tagged found! ${gpsFiles.length} photo${gpsFiles.length>1?'s':''} already ${gpsFiles.length>1?'have':'has'} GPS data`;
+    const coords = gpsFiles.slice(0,3).map(f =>
       `${f.file.name}: ${f.existingGps.lat}, ${f.existingGps.lng}`
     ).join(' · ');
     document.getElementById('gps-banner-detail').textContent =
-      coords + (gpsFiles.length > 2 ? ` and ${gpsFiles.length-2} more.` : '') +
-      ' You can re-tag with a new location below.';
+      coords + (gpsFiles.length > 3 ? ` and ${gpsFiles.length-3} more.` : '.') +
+      ' You can re-tag them with a new location below, or download as-is.';
     banner.classList.add('show');
   } else {
     banner.classList.remove('show');
@@ -708,6 +787,7 @@ async function tagAndDownload(format) {
 
     for (const filename of td.files) {
       let dlUrl = `${API}/api/download/${td.token}/${filename}`;
+      let dlName = filename;
 
       if (format !== 'jpg') {
         const cr = await fetch(`${API}/api/convert`, {
@@ -718,14 +798,21 @@ async function tagAndDownload(format) {
         if (!cr.ok) throw new Error('Conversion failed');
         const cd = await cr.json();
         dlUrl = API + cd.download_url;
+        dlName = filename.replace('.jpg', `.${format}`);
       }
 
+      // Use blob download to ensure cross-origin files download properly
+      const blobResp = await fetch(dlUrl);
+      if (!blobResp.ok) throw new Error('Download failed for ' + dlName);
+      const blob = await blobResp.blob();
+      const blobUrl = URL.createObjectURL(blob);
       const a = document.createElement('a');
-      a.href = dlUrl;
-      a.download = filename.replace('.jpg', `.${format}`);
+      a.href = blobUrl;
+      a.download = dlName;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
+      URL.revokeObjectURL(blobUrl);
       await new Promise(r => setTimeout(r, 400));
     }
 
@@ -766,8 +853,6 @@ function toggleFaq(btn) {
 }
 </script>
 
-<!-- Load Google Maps with Places library — callback fires initGoogleMaps() -->
-<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB2taGJwdwDsCMMpRq641hKyinhRc0tuMI&libraries=places&callback=initGoogleMaps" async defer></script>
 
 </body>
 </html>
