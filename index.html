@@ -191,8 +191,26 @@ tbody tr:hover td{background:var(--off)}
 .modal{background:var(--white);border-radius:var(--radius);padding:28px;width:100%;max-width:420px;box-shadow:var(--shadow-lg)}
 .modal h3{font-size:18px;font-weight:700;margin-bottom:18px}
 .modal label{display:block;font-size:11px;color:var(--gray-500);margin-bottom:4px;margin-top:12px;font-weight:600;text-transform:uppercase;letter-spacing:.05em}
-.modal input{width:100%;padding:10px 12px;background:var(--off);border:1px solid var(--border);border-radius:var(--radius-xs);font-family:inherit;font-size:14px;outline:none}
-.modal input:focus{border-color:var(--blue)}
+.modal input,.modal textarea{width:100%;padding:10px 12px;background:var(--off);border:1px solid var(--border);border-radius:var(--radius-xs);font-family:inherit;font-size:14px;outline:none}
+.modal textarea{min-height:72px;resize:vertical;margin-top:0}
+.modal input:focus,.modal textarea:focus{border-color:var(--blue)}
+.modal .field-hint{font-size:11px;color:var(--gray-400);margin-top:4px;font-weight:400;text-transform:none;letter-spacing:0}
+.modal-wide{max-width:520px}
+.auth-tabs{display:flex;gap:8px;margin-bottom:16px}
+.auth-tab{flex:1;padding:8px;border:1px solid var(--border);border-radius:var(--radius-xs);background:var(--off);cursor:pointer;font-weight:600;font-size:13px}
+.auth-tab.active{background:var(--blue-light);border-color:var(--blue);color:var(--blue)}
+.user-list{margin:12px 0;max-height:160px;overflow-y:auto;border:1px solid var(--border-light);border-radius:var(--radius-xs)}
+.user-row{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border-bottom:1px solid var(--border-light);font-size:13px}
+.user-row:last-child{border-bottom:none}
+.btn-danger{padding:6px 10px;background:#fef2f2;border:1px solid #fecaca;color:#b91c1c;border-radius:6px;cursor:pointer;font-size:12px}
+.session-badge{font-size:11px;color:var(--green);font-weight:600;margin-left:6px}
+
+/* ACTION BAR */
+.action-bar{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px;padding:12px;background:var(--gray-50);border:1px solid var(--border);border-radius:var(--radius)}
+.act-btn{display:inline-flex;align-items:center;gap:6px;padding:9px 14px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--white);font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;color:var(--gray-700);transition:all .2s}
+.act-btn:hover{background:var(--gray-100);border-color:var(--gray-300)}
+.act-btn.act-primary{background:var(--gradient);color:#fff;border:none;box-shadow:var(--shadow-sm)}
+.act-btn.act-pro .pro-badge{margin-left:4px}
 .modal-foot{display:flex;gap:10px;margin-top:20px;justify-content:flex-end}
 .btn-cancel{padding:10px 16px;background:var(--off);border:1px solid var(--border);border-radius:999px;color:var(--gray-700);font-family:inherit;font-size:14px;font-weight:600;cursor:pointer}
 .btn-save{padding:10px 20px;background:var(--blue);border:none;border-radius:999px;color:#fff;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer}
@@ -210,17 +228,78 @@ tbody tr:hover td{background:var(--off)}
 <div id="toast"><span id="toast-icon"></span><span id="toast-msg"></span></div>
 
 <div class="modal-bg" id="meta-modal">
-  <div class="modal">
-    <h3>Edit image metadata</h3>
-    <label>Title / Description</label>
-    <input type="text" id="meta-title" placeholder="e.g. Restaurant storefront — Main St"/>
-    <label>Author / Photographer</label>
-    <input type="text" id="meta-author" placeholder="Your name or business"/>
-    <label>Copyright</label>
+  <div class="modal modal-wide">
+    <h3>Edit photo metadata</h3>
+    <p style="font-size:13px;color:var(--gray-500);margin-bottom:12px">Embedded into EXIF on download (JPG). Keywords help local SEO; Description maps to ImageDescription &amp; UserComment.</p>
+    <label for="meta-keywords">Keywords</label>
+    <input type="text" id="meta-keywords" placeholder="e.g. restaurant, downtown, local business"/>
+    <p class="field-hint">Saved as XPKeywords / compatible EXIF keyword tags</p>
+    <label for="meta-description">Description</label>
+    <textarea id="meta-description" placeholder="Describe the photo location or subject…"></textarea>
+    <p class="field-hint">EXIF ImageDescription &amp; UserComment</p>
+    <label for="meta-creator">Creator / Artist</label>
+    <input type="text" id="meta-creator" placeholder="Photographer or business name"/>
+    <label for="meta-copyright">Copyright</label>
     <input type="text" id="meta-copyright" placeholder="© 2026 Your Business"/>
     <div class="modal-foot">
-      <button class="btn-cancel" onclick="closeModal()">Cancel</button>
-      <button class="btn-save" onclick="saveMetadata()">Save</button>
+      <button class="btn-cancel" type="button" onclick="closeModal()">Cancel</button>
+      <button class="btn-save" type="button" onclick="saveMetadata()">Save metadata</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="login-modal">
+  <div class="modal">
+    <h3>Login</h3>
+    <div class="auth-tabs">
+      <button type="button" class="auth-tab active" id="tab-user" onclick="switchAuthTab('user')">Pro user</button>
+      <button type="button" class="auth-tab" id="tab-admin" onclick="switchAuthTab('admin')">Admin</button>
+    </div>
+    <div id="auth-user-panel">
+      <label for="login-username">Username</label>
+      <input type="text" id="login-username" autocomplete="username"/>
+      <label for="login-password">Password</label>
+      <input type="password" id="login-password" autocomplete="current-password"/>
+    </div>
+    <div id="auth-admin-panel" style="display:none">
+      <label for="admin-password">Admin password</label>
+      <input type="password" id="admin-password" autocomplete="current-password"/>
+      <p class="field-hint">First visit? Use Admin tab to create the super admin account.</p>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-cancel" type="button" onclick="closeLoginModal()">Cancel</button>
+      <button class="btn-save" type="button" onclick="submitLogin()">Sign in</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="setup-admin-modal">
+  <div class="modal">
+    <h3>Create super admin</h3>
+    <p style="font-size:14px;color:var(--gray-500);margin-bottom:12px">First-time setup for Fastgeotag. Choose an admin password to manage Pro users.</p>
+    <label for="setup-admin-pass">Admin password</label>
+    <input type="password" id="setup-admin-pass"/>
+    <label for="setup-admin-pass2">Confirm password</label>
+    <input type="password" id="setup-admin-pass2"/>
+    <div class="modal-foot">
+      <button class="btn-save" type="button" onclick="completeAdminSetup()">Create admin</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="admin-panel-modal">
+  <div class="modal modal-wide">
+    <h3>Manage Pro users</h3>
+    <p style="font-size:13px;color:var(--gray-500);margin-bottom:12px">Users listed here can log in to unlock Pro features on this browser.</p>
+    <div class="user-list" id="admin-user-list"></div>
+    <label for="new-username">New username</label>
+    <input type="text" id="new-username"/>
+    <label for="new-password">Password</label>
+    <input type="password" id="new-password"/>
+    <div class="modal-foot" style="flex-wrap:wrap">
+      <button class="btn-cancel" type="button" onclick="exportUsers()">Export users</button>
+      <button class="btn-cancel" type="button" onclick="logout()">Logout</button>
+      <button class="btn-save" type="button" onclick="addProUser()">Add user</button>
     </div>
   </div>
 </div>
@@ -238,10 +317,10 @@ tbody tr:hover td{background:var(--off)}
     </a>
     <h1 class="page-title"><span>Geotag Photos </span><span class="online">Online</span></h1>
     <div class="header-actions">
-      <button class="btn-pro" type="button" onclick="showProToast()"><span class="pro-label-desktop">Remove Ads</span><span class="pro-label-mobile" style="display:none">No Ads</span></button>
-      <button class="btn-login" type="button" onclick="showLoginToast()">
+      <button class="btn-pro" type="button" onclick="handleHeaderPro()"><span class="pro-label-desktop">Remove Ads</span><span class="pro-label-mobile" style="display:none">No Ads</span></button>
+      <button class="btn-login" type="button" id="header-login-btn" onclick="handleHeaderLogin()">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" x2="3" y1="12" y2="12"/></svg>
-        Login
+        <span id="header-login-label">Login</span>
       </button>
     </div>
   </div>
@@ -305,6 +384,14 @@ tbody tr:hover td{background:var(--off)}
     <div class="coord-badge" id="coord-badge">📍 <span id="coord-txt"></span></div>
   </section>
 
+  <div class="action-bar" id="action-bar" aria-label="Photo actions">
+    <button type="button" class="act-btn act-primary" onclick="tagAndDownload()">📍 Tag Photo</button>
+    <button type="button" class="act-btn" onclick="editFirstPhoto()">✏️ Edit Metadata</button>
+    <button type="button" class="act-btn" onclick="resetAll()">↺ Reset</button>
+    <button type="button" class="act-btn act-pro" onclick="requirePro(openBusinessProfiles)">🏢 Business Profiles <span class="pro-badge">PRO</span></button>
+    <button type="button" class="act-btn act-pro" onclick="requirePro(generateReport)">📄 Before/After Report <span class="pro-badge">PRO</span></button>
+  </div>
+
   <div id="photo-list-section">
     <div class="photo-card">
       <div class="photo-card-hdr">
@@ -345,7 +432,7 @@ tbody tr:hover td{background:var(--off)}
             <li>Upload your photos (JPG, PNG, WebP, AVIF or HEIC).</li>
             <li>If photos already have geotags, coordinates appear automatically.</li>
             <li>Search for a location (e.g. Bangladesh) or click the map to set coordinates.</li>
-            <li>Optionally add metadata like title and copyright.</li>
+            <li>Optionally add keywords, description, creator, and copyright metadata.</li>
             <li>Download geotagged photos with GPS embedded in EXIF.</li>
           </ol>
         </div>
@@ -399,7 +486,7 @@ tbody tr:hover td{background:var(--off)}
 <div class="bot-bar">
   <button class="dl-btn dl-main" type="button" onclick="tagAndDownload()">⬇ Download Tagged <span class="cnt" id="cnt">0</span></button>
   <button class="dl-btn dl-premium" type="button" onclick="showPremiumModal()">⭐ Premium</button>
-  <button class="dl-btn dl-pro" type="button" onclick="showPremiumModal('format')">⬇ WebP / AVIF</button>
+  <button class="dl-btn dl-pro" type="button" onclick="handleFormatDownload()">⬇ WebP / AVIF</button>
 </div>
 
 <div class="modal-bg" id="premium-modal">
@@ -414,7 +501,7 @@ tbody tr:hover td{background:var(--off)}
     </ul>
     <div class="modal-foot">
       <button class="btn-cancel" type="button" onclick="closePremiumModal()">Maybe later</button>
-      <button class="btn-save" type="button" onclick="closePremiumModal(); showToast('Premium checkout coming soon', 'ok');">Upgrade to Pro</button>
+      <button class="btn-save" type="button" onclick="closePremiumModal(); showLoginModal();">Log in for Pro</button>
     </div>
   </div>
 </div>
@@ -430,6 +517,221 @@ let leafletMap = null, leafletMarker = null;
 let searchResults = [];
 let searchActiveIdx = -1;
 let searchDebounce = null;
+let authTab = 'user';
+
+const STORE_KEY = 'fastgeotag_auth_v1';
+const SESSION_KEY = 'fastgeotag_session';
+
+function emptyMeta() {
+  return { keywords: '', description: '', creator: '', copyright: '' };
+}
+
+function getStore() {
+  try { return JSON.parse(localStorage.getItem(STORE_KEY)) || null; } catch { return null; }
+}
+function saveStore(store) { localStorage.setItem(STORE_KEY, JSON.stringify(store)); }
+
+function getSession() {
+  try { return JSON.parse(sessionStorage.getItem(SESSION_KEY)) || null; } catch { return null; }
+}
+function saveSession(session) {
+  if (session) sessionStorage.setItem(SESSION_KEY, JSON.stringify(session));
+  else sessionStorage.removeItem(SESSION_KEY);
+  updateHeaderAuthUI();
+}
+
+async function hashPassword(password, salt) {
+  const data = new TextEncoder().encode(salt + password);
+  const buf = await crypto.subtle.digest('SHA-256', data);
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+function randomSalt() {
+  return Array.from(crypto.getRandomValues(new Uint8Array(16))).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+function isAdmin() { const s = getSession(); return s && s.type === 'admin'; }
+function isPro() { const s = getSession(); return s && (s.isPro || s.type === 'admin'); }
+
+function updateHeaderAuthUI() {
+  const label = document.getElementById('header-login-label');
+  const s = getSession();
+  if (!label) return;
+  if (isAdmin()) label.innerHTML = 'Admin <span class="session-badge">●</span>';
+  else if (isPro()) label.innerHTML = (s.username || 'Pro') + ' <span class="session-badge">PRO</span>';
+  else label.textContent = 'Login';
+  const urlInput = document.querySelector('#url-accordion input');
+  if (urlInput) {
+    urlInput.disabled = !isPro();
+    urlInput.placeholder = isPro() ? 'Paste a website URL…' : 'Paste a website URL (Pro feature)';
+  }
+}
+
+function initAuth() {
+  updateHeaderAuthUI();
+  if (!getStore()) document.getElementById('setup-admin-modal').classList.add('open');
+}
+
+async function completeAdminSetup() {
+  const p1 = document.getElementById('setup-admin-pass').value;
+  const p2 = document.getElementById('setup-admin-pass2').value;
+  if (p1.length < 8) { showToast('Admin password must be at least 8 characters', 'err'); return; }
+  if (p1 !== p2) { showToast('Passwords do not match', 'err'); return; }
+  const salt = randomSalt();
+  const hash = await hashPassword(p1, salt);
+  saveStore({ admin: { hash, salt }, users: [] });
+  saveSession({ type: 'admin', username: 'admin', isPro: true });
+  document.getElementById('setup-admin-modal').classList.remove('open');
+  showToast('Super admin created ✓', 'ok');
+  openAdminPanel();
+}
+
+function switchAuthTab(tab) {
+  authTab = tab;
+  document.getElementById('tab-user').classList.toggle('active', tab === 'user');
+  document.getElementById('tab-admin').classList.toggle('active', tab === 'admin');
+  document.getElementById('auth-user-panel').style.display = tab === 'user' ? 'block' : 'none';
+  document.getElementById('auth-admin-panel').style.display = tab === 'admin' ? 'block' : 'none';
+}
+
+function showLoginModal() {
+  switchAuthTab('user');
+  document.getElementById('login-modal').classList.add('open');
+}
+function closeLoginModal() { document.getElementById('login-modal').classList.remove('open'); }
+
+async function submitLogin() {
+  const store = getStore();
+  if (!store) { showToast('Complete admin setup first', 'err'); return; }
+  if (authTab === 'admin') {
+    const pw = document.getElementById('admin-password').value;
+    const hash = await hashPassword(pw, store.admin.salt);
+    if (hash !== store.admin.hash) { showToast('Invalid admin password', 'err'); return; }
+    saveSession({ type: 'admin', username: 'admin', isPro: true });
+    closeLoginModal();
+    showToast('Signed in as admin ✓', 'ok');
+    openAdminPanel();
+    return;
+  }
+  const username = document.getElementById('login-username').value.trim();
+  const pw = document.getElementById('login-password').value;
+  const user = (store.users || []).find(u => u.username === username);
+  if (!user) { showToast('User not found', 'err'); return; }
+  const hash = await hashPassword(pw, user.salt);
+  if (hash !== user.hash) { showToast('Invalid password', 'err'); return; }
+  saveSession({ type: 'user', username, isPro: true });
+  closeLoginModal();
+  showToast('Welcome back, ' + username + ' ✓', 'ok');
+}
+
+function handleHeaderLogin() {
+  if (isAdmin()) openAdminPanel();
+  else if (isPro()) logout();
+  else showLoginModal();
+}
+function handleHeaderPro() {
+  if (isPro()) showToast('You have Pro access ✓', 'ok');
+  else showPremiumModal();
+}
+function logout() {
+  saveSession(null);
+  closeAdminPanel();
+  showToast('Logged out', 'ok');
+}
+
+function openAdminPanel() {
+  if (!isAdmin()) { showLoginModal(); switchAuthTab('admin'); return; }
+  renderAdminUserList();
+  document.getElementById('admin-panel-modal').classList.add('open');
+}
+function closeAdminPanel() { document.getElementById('admin-panel-modal').classList.remove('open'); }
+
+function renderAdminUserList() {
+  const store = getStore();
+  const list = document.getElementById('admin-user-list');
+  const users = store?.users || [];
+  if (!users.length) {
+    list.innerHTML = '<div class="user-row" style="color:var(--gray-500)">No Pro users yet</div>';
+    return;
+  }
+  list.innerHTML = users.map(u => `
+    <div class="user-row">
+      <span>${u.username}</span>
+      <button type="button" class="btn-danger" onclick="removeProUser('${u.username}')">Remove</button>
+    </div>`).join('');
+}
+
+async function addProUser() {
+  const store = getStore();
+  const username = document.getElementById('new-username').value.trim();
+  const pw = document.getElementById('new-password').value;
+  if (!username || pw.length < 6) { showToast('Username and password (6+ chars) required', 'err'); return; }
+  if ((store.users || []).some(u => u.username === username)) { showToast('User already exists', 'err'); return; }
+  const salt = randomSalt();
+  store.users.push({ username, hash: await hashPassword(pw, salt), salt });
+  saveStore(store);
+  document.getElementById('new-username').value = '';
+  document.getElementById('new-password').value = '';
+  renderAdminUserList();
+  showToast('Pro user added ✓', 'ok');
+}
+
+function removeProUser(username) {
+  const store = getStore();
+  store.users = (store.users || []).filter(u => u.username !== username);
+  saveStore(store);
+  renderAdminUserList();
+  showToast('User removed', 'ok');
+}
+
+function exportUsers() {
+  const store = getStore();
+  const blob = new Blob([JSON.stringify({ users: (store?.users || []).map(u => ({ username: u.username })) }, null, 2)], { type: 'application/json' });
+  downloadBlob(blob, 'fastgeotag-users-export.json');
+  showToast('User list exported (no passwords)', 'ok');
+}
+
+function requirePro(fn) {
+  if (isPro()) { fn(); return; }
+  showToast('Pro login required for this feature', 'warn');
+  showPremiumModal();
+}
+
+function handleFormatDownload() {
+  requirePro(() => showToast('WebP/AVIF export coming soon for Pro — use Download Tagged for JPG', 'warn'));
+}
+
+function openBusinessProfiles() {
+  showToast('Business Profiles: save locations + default metadata (Pro preview)', 'ok');
+}
+function generateReport() {
+  showToast('Before/After PDF report — Pro feature coming soon', 'ok');
+}
+
+function editFirstPhoto() {
+  if (!files.length) { showToast('Upload a photo first', 'err'); return; }
+  openModal(editIdx !== null ? editIdx : 0);
+}
+
+function resetAll() {
+  files.forEach(f => { if (f.preview?.startsWith('blob:')) URL.revokeObjectURL(f.preview); });
+  files = [];
+  selLat = selLng = null;
+  editIdx = null;
+  compress = false;
+  document.getElementById('t-track')?.classList.remove('on');
+  document.getElementById('compress-tog')?.setAttribute('aria-checked', 'false');
+  document.getElementById('loc-search').value = '';
+  document.getElementById('m-lat').value = '';
+  document.getElementById('m-lng').value = '';
+  document.getElementById('coord-badge')?.classList.remove('show');
+  if (leafletMarker && leafletMap) { leafletMap.removeLayer(leafletMarker); leafletMarker = null; }
+  hideSuggestions();
+  renderTable();
+  updateCount();
+  updateGpsBanner();
+  setProgress(0, true);
+  showToast('Session reset ✓', 'ok');
+}
 
 function initLeafletMap() {
   leafletMap = L.map('map', { zoomControl: true }).setView([23.685, 90.356], 6);
@@ -559,7 +861,7 @@ document.addEventListener('click', e => {
   if (!e.target.closest('.search-wrap')) hideSuggestions();
 });
 
-document.addEventListener('DOMContentLoaded', initLeafletMap);
+document.addEventListener('DOMContentLoaded', () => { initLeafletMap(); initAuth(); });
 
 function setManual() {
   const lat = parseFloat(document.getElementById('m-lat').value);
@@ -596,16 +898,21 @@ function toggleInfoPanel(id) {
   }
 }
 
-function showProToast() { showPremiumModal(); }
-function showLoginToast() { showToast('Login coming soon', 'ok'); }
+function showProToast() { handleHeaderPro(); }
 function showPremiumModal(context) {
-  if (context === 'format') {
-    showToast('WebP & AVIF export is a Premium feature — upgrade to unlock', 'warn');
+  if (isPro()) {
+    if (context === 'format') handleFormatDownload();
+    else showToast('You already have Pro access ✓', 'ok');
+    return;
   }
+  if (context === 'format') showToast('WebP & AVIF export requires Pro login', 'warn');
   document.getElementById('premium-modal').classList.add('open');
 }
 function closePremiumModal() { document.getElementById('premium-modal').classList.remove('open'); }
 document.getElementById('premium-modal').addEventListener('click', e => { if (e.target === e.currentTarget) closePremiumModal(); });
+document.getElementById('login-modal').addEventListener('click', e => { if (e.target === e.currentTarget) closeLoginModal(); });
+document.getElementById('setup-admin-modal').addEventListener('click', e => { if (e.target === e.currentTarget && getStore()) e.currentTarget.classList.remove('open'); });
+document.getElementById('admin-panel-modal').addEventListener('click', e => { if (e.target === e.currentTarget) closeAdminPanel(); });
 
 if (window.matchMedia('(max-width:767px)').matches) {
   const desktop = document.querySelector('.pro-label-desktop');
@@ -687,7 +994,7 @@ function loadFiles(list) {
       }
       const blob = new Blob([buf], { type: file.type || 'application/octet-stream' });
       const preview = URL.createObjectURL(blob);
-      files.push({ file, preview, existingGps, metadata: { title:'', author:'', copyright:'' } });
+      files.push({ file, preview, existingGps, metadata: emptyMeta() });
       if (existingGps) newGpsCount++;
       pending--;
       if (pending === 0) {
@@ -731,7 +1038,7 @@ function renderTable() {
     const newCoord = selLat !== null
       ? `<span class="badge badge-new-coord">→ ${selLat.toFixed(4)}, ${selLng.toFixed(4)}</span>`
       : `<span class="badge badge-none">Not set</span>`;
-    const metaBadge = f.metadata.title || f.metadata.author
+    const metaBadge = f.metadata.keywords || f.metadata.description || f.metadata.creator || f.metadata.copyright
       ? `<span class="badge badge-meta">✓ set</span>`
       : `<span class="badge badge-none">—</span>`;
     return `<tr>
@@ -763,24 +1070,31 @@ function toggleCompress() {
 function openModal(i) {
   editIdx = i;
   const m = files[i].metadata;
-  document.getElementById('meta-title').value = m.title;
-  document.getElementById('meta-author').value = m.author;
-  document.getElementById('meta-copyright').value = m.copyright;
+  document.getElementById('meta-keywords').value = m.keywords || '';
+  document.getElementById('meta-description').value = m.description || '';
+  document.getElementById('meta-creator').value = m.creator || '';
+  document.getElementById('meta-copyright').value = m.copyright || '';
   document.getElementById('meta-modal').classList.add('open');
-  setTimeout(() => document.getElementById('meta-title').focus(), 80);
+  setTimeout(() => document.getElementById('meta-keywords').focus(), 80);
 }
 function closeModal() { document.getElementById('meta-modal').classList.remove('open'); editIdx = null; }
 function saveMetadata() {
   if (editIdx === null) return;
   files[editIdx].metadata = {
-    title: document.getElementById('meta-title').value,
-    author: document.getElementById('meta-author').value,
-    copyright: document.getElementById('meta-copyright').value,
+    keywords: document.getElementById('meta-keywords').value.trim(),
+    description: document.getElementById('meta-description').value.trim(),
+    creator: document.getElementById('meta-creator').value.trim(),
+    copyright: document.getElementById('meta-copyright').value.trim(),
   };
   closeModal(); renderTable(); showToast('Metadata saved ✓', 'ok');
 }
 document.getElementById('meta-modal').addEventListener('click', e => { if (e.target===e.currentTarget) closeModal(); });
-document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeModal(); closePremiumModal(); } });
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    closeModal(); closePremiumModal(); closeLoginModal(); closeAdminPanel();
+    if (getStore()) document.getElementById('setup-admin-modal').classList.remove('open');
+  }
+});
 
 function decToDms(dec) {
   const abs = Math.abs(dec);
@@ -850,9 +1164,13 @@ async function geotagFileClient(entry, lat, lng) {
     GPSLongitude: decToDms(lng),
   };
 
-  const { title, author, copyright } = entry.metadata;
-  if (title) exifObj['0th'][piexif.ImageIFD.ImageDescription] = title;
-  if (author) exifObj['0th'][piexif.ImageIFD.Artist] = author;
+  const { keywords, description, creator, copyright } = entry.metadata;
+  if (description) {
+    exifObj['0th'][piexif.ImageIFD.ImageDescription] = description;
+    exifObj.Exif[piexif.ExifIFD.UserComment] = description;
+  }
+  if (keywords) exifObj['0th'][40094] = keywords;
+  if (creator) exifObj['0th'][piexif.ImageIFD.Artist] = creator;
   if (copyright) exifObj['0th'][piexif.ImageIFD.Copyright] = copyright;
 
   const exifBytes = piexif.dump(exifObj);

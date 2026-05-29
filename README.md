@@ -26,7 +26,17 @@ Alternatively:
 python3 -m http.server 3000
 ```
 
-Geotagging runs entirely in the browser via piexifjs — no backend server required for JPG downloads.
+## Admin & Pro login (static site)
+
+On **first visit**, you will be prompted to create a **super admin** password (min 8 characters). That admin can:
+
+1. Click **Login → Admin** to open the user management panel
+2. Add/remove **Pro users** (username + password, SHA-256 hashed in `localStorage`)
+3. Export a username list (no passwords)
+
+Pro users log in via **Login → Pro user** to unlock Business Profiles, WebP/AVIF (when available), and URL extraction UI.
+
+**Security:** This is client-side access control only — suitable for lightweight gating on GitHub Pages, not for paid billing or secrets. See `FEATURES_REPORT.md` for the full roadmap.
 
 ## Build
 
