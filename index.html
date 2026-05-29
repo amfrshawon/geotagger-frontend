@@ -15,6 +15,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
 
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -105,11 +106,13 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
 .coord-badge{display:none;margin-top:10px;background:var(--blue-light);border:1px solid rgba(37,99,235,.2);color:var(--blue);padding:8px 14px;border-radius:999px;font-size:13px;font-weight:600;font-family:ui-monospace,monospace}
 .coord-badge.show{display:inline-flex;align-items:center;gap:8px}
 
-.pac-container{border-radius:var(--radius-sm)!important;border:1px solid var(--border)!important;box-shadow:var(--shadow-lg)!important;font-family:inherit!important;margin-top:4px!important}
-.pac-item{padding:10px 16px!important;font-size:14px!important;cursor:pointer!important;border-top:1px solid var(--border-light)!important}
-.pac-item:first-child{border-top:none!important}
-.pac-item:hover{background:var(--blue-light)!important}
-.pac-matched{color:var(--blue)}
+.search-suggestions{position:absolute;top:calc(100% + 4px);left:0;right:0;background:var(--white);border:1px solid var(--border);border-radius:var(--radius-sm);box-shadow:var(--shadow-lg);z-index:500;max-height:240px;overflow-y:auto;display:none}
+.search-suggestions.show{display:block}
+.search-suggestion{padding:10px 14px;font-size:14px;cursor:pointer;border-top:1px solid var(--border-light)}
+.search-suggestion:first-child{border-top:none}
+.search-suggestion:hover,.search-suggestion.active{background:var(--blue-light)}
+.search-suggestion small{display:block;color:var(--gray-500);font-size:12px;margin-top:2px}
+.leaflet-container{font-family:inherit;z-index:1}
 
 /* GPS BANNER */
 .gps-banner{display:none;background:var(--amber-pale);border:1px solid var(--amber-border);border-radius:var(--radius-xs);padding:12px 16px;margin-top:14px;font-size:13px;color:var(--amber);align-items:flex-start;gap:10px}
@@ -281,7 +284,8 @@ tbody tr:hover td{background:var(--off)}
   <section class="map-section" aria-label="Location picker">
     <div class="search-wrap">
       <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-      <input type="text" id="loc-search" placeholder="Search for a location" autocomplete="off" aria-label="Search for a location"/>
+      <input type="text" id="loc-search" placeholder="Search for a location" autocomplete="off" aria-label="Search for a location" aria-autocomplete="list" aria-controls="search-suggestions" aria-expanded="false"/>
+      <div id="search-suggestions" class="search-suggestions" role="listbox"></div>
     </div>
     <div class="map-wrap">
       <div id="map" role="application" aria-label="Interactive map"></div>
@@ -339,7 +343,7 @@ tbody tr:hover td{background:var(--off)}
           <ol>
             <li>Upload your photos (JPG, PNG, WebP, AVIF or HEIC).</li>
             <li>If photos already have geotags, coordinates appear automatically.</li>
-            <li>Search for a location or click the map to set coordinates.</li>
+            <li>Search for a location (e.g. Bangladesh) or click the map to set coordinates.</li>
             <li>Optionally add metadata like title and copyright.</li>
             <li>Download geotagged photos with GPS embedded in EXIF.</li>
           </ol>
@@ -397,8 +401,8 @@ tbody tr:hover td{background:var(--off)}
   <button class="dl-btn dl-avif" type="button" onclick="tagAndDownload('avif')">⬇ AVIF</button>
 </div>
 
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 <script>
-const GMAP_KEY = 'AIzaSyB2taGJwdwDsCMMpRq641hKyinhRc0tuMI';
 const API = window.location.hostname === 'localhost'
   ? 'http://localhost:8000'
   : 'https://instantgeotagger.up.railway.app';
@@ -406,57 +410,22 @@ const API = window.location.hostname === 'localhost'
 let files = [];
 let selLat = null, selLng = null;
 let compress = false, editIdx = null;
-let gMap = null, gMarker = null, autocomplete = null;
+let leafletMap = null, leafletMarker = null;
+let searchResults = [];
+let searchActiveIdx = -1;
+let searchDebounce = null;
 
-window.initGoogleMaps = function() {
-  gMap = new google.maps.Map(document.getElementById('map'), {
-    center: { lat: 40.7128, lng: -74.006 },
-    zoom: 12,
-    mapTypeControl: false,
-    streetViewControl: false,
-    fullscreenControl: true,
-    zoomControl: true,
-    styles: [{ featureType: 'poi', elementType: 'labels', stylers: [{ visibility: 'off' }] }]
-  });
+function initLeafletMap() {
+  leafletMap = L.map('map', { zoomControl: true }).setView([23.685, 90.356], 6);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
+    subdomains: 'abcd',
+    maxZoom: 20
+  }).addTo(leafletMap);
 
-  gMap.addListener('click', e => setCoords(e.latLng.lat(), e.latLng.lng()));
-
-  autocomplete = new google.maps.places.Autocomplete(
-    document.getElementById('loc-search'),
-    { fields: ['geometry', 'name', 'formatted_address'] }
-  );
-
-  autocomplete.addListener('place_changed', () => {
-    const place = autocomplete.getPlace();
-    if (!place.geometry || !place.geometry.location) {
-      showToast('Could not find that location', 'err');
-      return;
-    }
-    const lat = place.geometry.location.lat();
-    const lng = place.geometry.location.lng();
-    setCoords(lat, lng);
-    showToast('📍 ' + (place.name || place.formatted_address), 'ok');
-  });
-};
-
-function triggerSearch() {
-  const q = document.getElementById('loc-search').value.trim();
-  if (!q) return;
-  const geocoder = new google.maps.Geocoder();
-  geocoder.geocode({ address: q }, (results, status) => {
-    if (status === 'OK' && results[0]) {
-      const loc = results[0].geometry.location;
-      setCoords(loc.lat(), loc.lng());
-      showToast('📍 ' + results[0].formatted_address, 'ok');
-    } else {
-      showToast('Location not found', 'err');
-    }
-  });
+  leafletMap.on('click', e => setCoords(e.latlng.lat, e.latlng.lng));
+  setTimeout(() => leafletMap.invalidateSize(), 100);
 }
-
-document.getElementById('loc-search').addEventListener('keydown', e => {
-  if (e.key === 'Enter') { e.preventDefault(); triggerSearch(); }
-});
 
 function setCoords(lat, lng) {
   selLat = lat; selLng = lng;
@@ -466,16 +435,115 @@ function setCoords(lat, lng) {
   document.getElementById('m-lat').value = lat;
   document.getElementById('m-lng').value = lng;
 
-  if (gMarker) gMarker.setMap(null);
-  gMarker = new google.maps.Marker({
-    position: { lat, lng },
-    map: gMap,
-    animation: google.maps.Animation.DROP
+  if (leafletMarker) leafletMap.removeLayer(leafletMarker);
+  leafletMarker = L.marker([lat, lng], { draggable: true }).addTo(leafletMap);
+  leafletMarker.on('dragend', e => {
+    const p = e.target.getLatLng();
+    setCoords(p.lat, p.lng);
   });
-  gMap.panTo({ lat, lng });
-  if (gMap.getZoom() < 13) gMap.setZoom(13);
+  leafletMap.setView([lat, lng], Math.max(leafletMap.getZoom(), 13));
   renderTable();
 }
+
+function formatPhotonLabel(props) {
+  const parts = [props.name, props.city, props.state, props.country].filter(Boolean);
+  return [...new Set(parts)].join(', ');
+}
+
+function hideSuggestions() {
+  const box = document.getElementById('search-suggestions');
+  box.classList.remove('show');
+  box.innerHTML = '';
+  searchResults = [];
+  searchActiveIdx = -1;
+  document.getElementById('loc-search').setAttribute('aria-expanded', 'false');
+}
+
+function selectSearchResult(idx) {
+  const feature = searchResults[idx];
+  if (!feature) return;
+  const [lng, lat] = feature.geometry.coordinates;
+  const label = formatPhotonLabel(feature.properties);
+  document.getElementById('loc-search').value = label;
+  hideSuggestions();
+  setCoords(lat, lng);
+  showToast('📍 ' + label, 'ok');
+}
+
+function renderSuggestions(features) {
+  const box = document.getElementById('search-suggestions');
+  searchResults = features;
+  searchActiveIdx = -1;
+  if (!features.length) {
+    box.innerHTML = '<div class="search-suggestion">No locations found</div>';
+    box.classList.add('show');
+    document.getElementById('loc-search').setAttribute('aria-expanded', 'true');
+    return;
+  }
+  box.innerHTML = features.map((f, i) => {
+    const label = formatPhotonLabel(f.properties);
+    const type = f.properties.type || f.properties.osm_value || '';
+    return `<div class="search-suggestion" role="option" data-idx="${i}" onclick="selectSearchResult(${i})">${label}${type ? `<small>${type}</small>` : ''}</div>`;
+  }).join('');
+  box.classList.add('show');
+  document.getElementById('loc-search').setAttribute('aria-expanded', 'true');
+}
+
+async function fetchLocationSuggestions(q) {
+  const res = await fetch(`https://photon.komoot.io/api/?q=${encodeURIComponent(q)}&limit=5`);
+  if (!res.ok) throw new Error('Search unavailable');
+  const data = await res.json();
+  renderSuggestions(data.features || []);
+}
+
+async function triggerSearch() {
+  const q = document.getElementById('loc-search').value.trim();
+  if (!q) return;
+  try {
+    await fetchLocationSuggestions(q);
+    if (searchResults.length) selectSearchResult(0);
+    else showToast('Location not found', 'err');
+  } catch (err) {
+    showToast('Location search failed — try again', 'err');
+  }
+}
+
+const locSearch = document.getElementById('loc-search');
+locSearch.addEventListener('input', () => {
+  const q = locSearch.value.trim();
+  clearTimeout(searchDebounce);
+  if (q.length < 2) { hideSuggestions(); return; }
+  searchDebounce = setTimeout(async () => {
+    try { await fetchLocationSuggestions(q); }
+    catch { hideSuggestions(); }
+  }, 300);
+});
+
+locSearch.addEventListener('keydown', e => {
+  const box = document.getElementById('search-suggestions');
+  const items = box.querySelectorAll('.search-suggestion[data-idx]');
+  if (e.key === 'ArrowDown' && items.length) {
+    e.preventDefault();
+    searchActiveIdx = Math.min(searchActiveIdx + 1, items.length - 1);
+    items.forEach((el, i) => el.classList.toggle('active', i === searchActiveIdx));
+  } else if (e.key === 'ArrowUp' && items.length) {
+    e.preventDefault();
+    searchActiveIdx = Math.max(searchActiveIdx - 1, 0);
+    items.forEach((el, i) => el.classList.toggle('active', i === searchActiveIdx));
+  } else if (e.key === 'Enter') {
+    e.preventDefault();
+    if (searchActiveIdx >= 0) selectSearchResult(searchActiveIdx);
+    else triggerSearch();
+  } else if (e.key === 'Escape') {
+    hideSuggestions();
+  }
+});
+
+document.addEventListener('click', e => {
+  if (!e.target.closest('.search-wrap')) hideSuggestions();
+});
+
+document.addEventListener('DOMContentLoaded', initLeafletMap);
 
 function setManual() {
   const lat = parseFloat(document.getElementById('m-lat').value);
@@ -755,8 +823,6 @@ function showToast(msg, type = '') {
   toastT = setTimeout(() => { t.className = ''; }, 4000);
 }
 </script>
-
-<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB2taGJwdwDsCMMpRq641hKyinhRc0tuMI&libraries=places&callback=initGoogleMaps" async defer></script>
 
 </body>
 </html>

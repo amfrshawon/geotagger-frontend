@@ -5,8 +5,8 @@ Static single-page app for geotagging photos online. Layout and styling inspired
 ## Features
 
 - Batch photo upload (JPG, PNG, WebP, AVIF, HEIC)
-- Location search with Google Places autocomplete
-- Interactive map with manual coordinate entry
+- Location search with Photon geocoding (free, no API key)
+- Interactive Leaflet map (OpenStreetMap / CARTO tiles) with manual coordinate entry
 - EXIF GPS detection on upload
 - Download geotagged images (JPG, WebP, AVIF)
 - Optional image compression and metadata editing
@@ -72,5 +72,5 @@ geotagger-frontend/
 ## Notes
 
 - **Login / Pro / URL extraction**: UI placeholders only; wire to your auth and billing when ready.
-- **Google Maps**: Uses the existing Maps/Places API key in `index.html`. Restrict the key to your domains in Google Cloud Console.
+- **Maps**: Leaflet + CARTO Voyager tiles + Photon search — no Google API key or billing required.
 - **Backend**: Geotagging requires the Railway API (or your own backend) for EXIF embedding.
