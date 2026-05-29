@@ -35,7 +35,7 @@
   --gradient:linear-gradient(90deg,var(--purple),var(--blue));
 }
 html{scroll-behavior:smooth}
-body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--white);color:var(--gray-900);font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased;padding-bottom:88px}
+body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--white);color:var(--gray-900);font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased;padding-bottom:120px}
 
 .container{max-width:896px;margin:0 auto;padding:0 16px}
 
@@ -385,7 +385,7 @@ tbody tr:hover td{background:var(--off)}
   </section>
 
   <div class="action-bar" id="action-bar" aria-label="Photo actions">
-    <button type="button" class="act-btn act-primary" onclick="tagAndDownload()">📍 Tag Photo</button>
+    <button type="button" class="act-btn act-primary" onclick="tagPhoto()">📍 Tag Photo</button>
     <button type="button" class="act-btn" onclick="editFirstPhoto()">✏️ Edit Metadata</button>
     <button type="button" class="act-btn" onclick="resetAll()">↺ Reset</button>
     <button type="button" class="act-btn act-pro" onclick="requirePro(openBusinessProfiles)">🏢 Business Profiles <span class="pro-badge">PRO</span></button>
@@ -486,7 +486,8 @@ tbody tr:hover td{background:var(--off)}
 <div class="bot-bar">
   <button class="dl-btn dl-main" type="button" onclick="tagAndDownload()">⬇ Download Tagged <span class="cnt" id="cnt">0</span></button>
   <button class="dl-btn dl-premium" type="button" onclick="showPremiumModal()">⭐ Premium</button>
-  <button class="dl-btn dl-pro" type="button" onclick="handleFormatDownload()">⬇ WebP / AVIF</button>
+  <button class="dl-btn dl-pro" type="button" onclick="handleFormatDownload('webp')">⬇ WebP</button>
+  <button class="dl-btn dl-pro" type="button" onclick="handleFormatDownload('avif')">⬇ AVIF</button>
 </div>
 
 <div class="modal-bg" id="premium-modal">
@@ -675,9 +676,9 @@ async function addProUser() {
   showToast('Pro user added ✓', 'ok');
 }
 
-function removeProUser(username) {
+function removeProUser(index) {
   const store = getStore();
-  store.users = (store.users || []).filter(u => u.username !== username);
+  store.users.splice(index, 1);
   saveStore(store);
   renderAdminUserList();
   showToast('User removed', 'ok');
@@ -696,8 +697,8 @@ function requirePro(fn) {
   showPremiumModal();
 }
 
-function handleFormatDownload() {
-  requirePro(() => showToast('WebP/AVIF export coming soon for Pro — use Download Tagged for JPG', 'warn'));
+function handleFormatDownload(format) {
+  requirePro(() => downloadAllAsFormat(format));
 }
 
 function openBusinessProfiles() {
@@ -994,7 +995,7 @@ function loadFiles(list) {
       }
       const blob = new Blob([buf], { type: file.type || 'application/octet-stream' });
       const preview = URL.createObjectURL(blob);
-      files.push({ file, preview, existingGps, metadata: emptyMeta() });
+      files.push({ file, preview, existingGps, metadata: emptyMeta(), tagged: false, appliedGps: null });
       if (existingGps) newGpsCount++;
       pending--;
       if (pending === 0) {
@@ -1035,7 +1036,9 @@ function renderTable() {
     const gpsBadge = f.existingGps
       ? `<span class="badge badge-has-gps">📍 ${f.existingGps.lat}, ${f.existingGps.lng}</span>`
       : `<span class="badge badge-none">None</span>`;
-    const newCoord = selLat !== null
+    const newCoord = f.appliedGps || (selLat !== null && f.tagged)
+      ? `<span class="badge badge-new-coord">→ ${(f.appliedGps?.lat ?? selLat).toFixed(4)}, ${(f.appliedGps?.lng ?? selLng).toFixed(4)}</span>`
+      : selLat !== null
       ? `<span class="badge badge-new-coord">→ ${selLat.toFixed(4)}, ${selLng.toFixed(4)}</span>`
       : `<span class="badge badge-none">Not set</span>`;
     const metaBadge = f.metadata.keywords || f.metadata.description || f.metadata.creator || f.metadata.copyright
@@ -1102,7 +1105,59 @@ function decToDms(dec) {
   const minFloat = (abs - deg) * 60;
   const min = Math.floor(minFloat);
   const sec = Math.round((minFloat - min) * 60 * 100);
-  return [[deg, 1], [min, 1], [sec, 100]];
+  return [[deg, 1], [min, 1], [Math.max(sec, 0), 100]];
+}
+
+function ensureExifStructure(exifObj) {
+  exifObj['0th'] = exifObj['0th'] || {};
+  exifObj.Exif = exifObj.Exif || {};
+  exifObj.GPS = exifObj.GPS || {};
+  exifObj['1st'] = exifObj['1st'] || {};
+  if (!('thumbnail' in exifObj)) exifObj.thumbnail = null;
+  return exifObj;
+}
+
+function applyMetadataToExif(exifObj, metadata) {
+  const { keywords, description, creator, copyright } = metadata;
+  if (description) {
+    exifObj['0th'][piexif.ImageIFD.ImageDescription] = description;
+    exifObj.Exif[piexif.ExifIFD.UserComment] = piexif.helper.UserComment.encode(description);
+  }
+  if (keywords) {
+    const desc = exifObj['0th'][piexif.ImageIFD.ImageDescription] || '';
+    exifObj['0th'][piexif.ImageIFD.ImageDescription] = desc
+      ? `${desc} | Keywords: ${keywords}`
+      : `Keywords: ${keywords}`;
+  }
+  if (creator) exifObj['0th'][piexif.ImageIFD.Artist] = creator;
+  if (copyright) exifObj['0th'][piexif.ImageIFD.Copyright] = copyright;
+}
+
+function applyGpsToExif(exifObj, lat, lng) {
+  exifObj.GPS = {
+    GPSLatitudeRef: lat >= 0 ? 'N' : 'S',
+    GPSLatitude: decToDms(lat),
+    GPSLongitudeRef: lng >= 0 ? 'E' : 'W',
+    GPSLongitude: decToDms(lng),
+  };
+}
+
+function loadImageFromUrl(url) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = () => reject(new Error('Could not decode image'));
+    img.src = url;
+  });
+}
+
+function canvasToBlob(canvas, mime, quality) {
+  return new Promise((resolve, reject) => {
+    canvas.toBlob(blob => {
+      if (blob) resolve(blob);
+      else reject(new Error(`${mime.split('/')[1].toUpperCase()} export not supported in this browser`));
+    }, mime, quality);
+  });
 }
 
 function blobToDataUrl(blob) {
@@ -1140,41 +1195,92 @@ function fileToJpegDataUrl(file, quality) {
   });
 }
 
-function outputFilename(name) {
+function outputFilename(name, ext, lat, lng) {
   const base = name.replace(/\.[^.]+$/, '');
-  return base + '_geotagged.jpg';
+  const coord = lat != null && lng != null ? `_${Number(lat).toFixed(4)}_${Number(lng).toFixed(4)}` : '';
+  return `${base}_geotagged${coord}.${ext}`;
+}
+
+async function buildGeotaggedJpegDataUrl(entry) {
+  const quality = compress ? 0.75 : 0.92;
+  const isJpeg = entry.file.type === 'image/jpeg' || /\.jpe?g$/i.test(entry.file.name);
+  return isJpeg && !compress
+    ? await blobToDataUrl(entry.file)
+    : await fileToJpegDataUrl(entry.file, quality);
 }
 
 async function geotagFileClient(entry, lat, lng) {
-  const quality = compress ? 0.75 : 0.92;
-  const isJpeg = entry.file.type === 'image/jpeg' || /\.jpe?g$/i.test(entry.file.name);
-  let dataUrl = isJpeg && !compress
-    ? await blobToDataUrl(entry.file)
-    : await fileToJpegDataUrl(entry.file, quality);
+  const dataUrl = await buildGeotaggedJpegDataUrl(entry);
+  let exifObj = ensureExifStructure({});
+  try {
+    exifObj = ensureExifStructure(piexif.load(dataUrl));
+  } catch { /* fresh EXIF */ }
 
-  let exifObj = {};
-  try { exifObj = piexif.load(dataUrl); } catch {
-    exifObj = { '0th': {}, Exif: {}, GPS: {}, '1st': {}, Interop: {}, thumbnail: null };
-  }
-
-  exifObj.GPS = {
-    GPSLatitudeRef: lat >= 0 ? 'N' : 'S',
-    GPSLatitude: decToDms(lat),
-    GPSLongitudeRef: lng >= 0 ? 'E' : 'W',
-    GPSLongitude: decToDms(lng),
-  };
-
-  const { keywords, description, creator, copyright } = entry.metadata;
-  if (description) {
-    exifObj['0th'][piexif.ImageIFD.ImageDescription] = description;
-    exifObj.Exif[piexif.ExifIFD.UserComment] = description;
-  }
-  if (keywords) exifObj['0th'][40094] = keywords;
-  if (creator) exifObj['0th'][piexif.ImageIFD.Artist] = creator;
-  if (copyright) exifObj['0th'][piexif.ImageIFD.Copyright] = copyright;
+  applyGpsToExif(exifObj, lat, lng);
+  applyMetadataToExif(exifObj, entry.metadata || emptyMeta());
 
   const exifBytes = piexif.dump(exifObj);
   return dataUrlToBlob(piexif.insert(exifBytes, dataUrl));
+}
+
+async function convertJpegBlobToFormat(jpegBlob, format) {
+  const quality = compress ? 0.75 : 0.88;
+  const url = URL.createObjectURL(jpegBlob);
+  try {
+    const img = await loadImageFromUrl(url);
+    const canvas = document.createElement('canvas');
+    canvas.width = img.naturalWidth;
+    canvas.height = img.naturalHeight;
+    canvas.getContext('2d').drawImage(img, 0, 0);
+    const mime = format === 'avif' ? 'image/avif' : 'image/webp';
+    return await canvasToBlob(canvas, mime, quality);
+  } finally {
+    URL.revokeObjectURL(url);
+  }
+}
+
+function tagPhoto(silent) {
+  if (!files.length) { showToast('Upload at least one photo first', 'err'); return false; }
+  if (selLat === null || selLng === null) { showToast('Please pick a location on the map first', 'err'); return false; }
+  files.forEach(f => {
+    f.appliedGps = { lat: selLat, lng: selLng };
+    f.tagged = true;
+  });
+  renderTable();
+  if (!silent) showToast(`✓ ${files.length} photo${files.length > 1 ? 's' : ''} tagged — ready to download`, 'ok');
+  return true;
+}
+
+async function downloadAllAsFormat(format) {
+  if (!tagPhoto(true)) return;
+  const label = format.toUpperCase();
+  showToast(`Exporting ${label}…`, '');
+  setProgress(10);
+
+  try {
+    let done = 0;
+    for (const entry of files) {
+      const jpegBlob = await geotagFileClient(entry, selLat, selLng);
+      let blob = jpegBlob;
+      let ext = 'jpg';
+      if (format !== 'jpg') {
+        blob = await convertJpegBlobToFormat(jpegBlob, format);
+        ext = format;
+      }
+      downloadBlob(blob, outputFilename(entry.file.name, ext, selLat, selLng));
+      done++;
+      setProgress(10 + Math.round((done / files.length) * 85));
+      await new Promise(r => setTimeout(r, 300));
+    }
+    setProgress(100);
+    const note = format === 'jpg' ? '' : ' (GPS/metadata in JPG; coords in filename for WebP/AVIF)';
+    showToast(`✓ ${files.length} ${label} file${files.length > 1 ? 's' : ''} downloaded${note}`, 'ok');
+    setTimeout(() => setProgress(0, true), 1800);
+  } catch (err) {
+    console.error(err);
+    showToast('Error: ' + (err.message || 'Export failed'), 'err');
+    setProgress(0, true);
+  }
 }
 
 function downloadBlob(blob, filename) {
@@ -1189,29 +1295,7 @@ function downloadBlob(blob, filename) {
 }
 
 async function tagAndDownload() {
-  if (!files.length) { showToast('Upload at least one photo first', 'err'); return; }
-  if (selLat === null) { showToast('Please pick a location on the map first', 'err'); return; }
-
-  showToast('Geotagging in your browser…', '');
-  setProgress(10);
-
-  try {
-    let done = 0;
-    for (const entry of files) {
-      const blob = await geotagFileClient(entry, selLat, selLng);
-      downloadBlob(blob, outputFilename(entry.file.name));
-      done++;
-      setProgress(10 + Math.round((done / files.length) * 85));
-      await new Promise(r => setTimeout(r, 300));
-    }
-    setProgress(100);
-    showToast(`✓ ${files.length} photo${files.length > 1 ? 's' : ''} geotagged & downloaded!`, 'ok');
-    setTimeout(() => setProgress(0, true), 1800);
-  } catch (err) {
-    console.error(err);
-    showToast('Error: ' + (err.message || 'Geotagging failed'), 'err');
-    setProgress(0, true);
-  }
+  await downloadAllAsFormat('jpg');
 }
 
 function setProgress(pct, hide = false) {
