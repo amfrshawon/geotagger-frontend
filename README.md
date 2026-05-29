@@ -1,4 +1,4 @@
-# FastGeoTagger Frontend
+# Fastgeotag Frontend
 
 Static single-page app for geotagging photos online. Layout and styling inspired by [fastgeotagger.com](https://www.fastgeotagger.com/).
 
@@ -8,7 +8,8 @@ Static single-page app for geotagging photos online. Layout and styling inspired
 - Location search with Photon geocoding (free, no API key)
 - Interactive Leaflet map (OpenStreetMap / CARTO tiles) with manual coordinate entry
 - EXIF GPS detection on upload
-- Download geotagged images (JPG, WebP, AVIF)
+- Client-side EXIF GPS embedding (piexifjs) — no backend required for JPG download
+- Download geotagged images as JPG (WebP/AVIF via Premium)
 - Optional image compression and metadata editing
 
 ## Local development

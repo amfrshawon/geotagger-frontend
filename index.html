@@ -3,14 +3,14 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Geotag Photos Online for Free | Batch Image Uploads | Boost Local SEO</title>
+<title>Fastgeotag — Geotag Photos Online for Free</title>
 <meta name="description" content="Geotag photos online with fast batch uploads. Add GPS coordinates with location search to boost local SEO. Free browser-based geotagging for JPG, PNG, WebP, AVIF and HEIC."/>
 <meta name="robots" content="index, follow"/>
 <link rel="canonical" href="https://amfrshawon.github.io/geotagger-frontend/"/>
 <meta property="og:type" content="website"/>
 <meta property="og:title" content="Geotag Photos Online for Free | Batch Image Uploads"/>
 <meta property="og:description" content="Free online photo geotagging tool. Add GPS coordinates to images for local SEO and Google Maps visibility."/>
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"FastGeoTagger","url":"https://amfrshawon.github.io/geotagger-frontend/","description":"Free online tool to geotag photos and images.","applicationCategory":"UtilitiesApplication","operatingSystem":"Any","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"Fastgeotag","url":"https://amfrshawon.github.io/geotagger-frontend/","description":"Free online tool to geotag photos and images.","applicationCategory":"UtilitiesApplication","operatingSystem":"Any","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}}</script>
 
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
@@ -173,8 +173,9 @@ tbody tr:hover td{background:var(--off)}
 .dl-btn{display:inline-flex;align-items:center;gap:8px;padding:12px 20px;border-radius:999px;border:none;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;transition:all .2s}
 .dl-btn:hover{transform:translateY(-1px)}
 .dl-main{background:var(--gradient);color:#fff;box-shadow:0 4px 14px rgba(37,99,235,.35)}
-.dl-webp{background:var(--gray-900);color:#fff}
-.dl-avif{background:var(--off);color:var(--gray-900);border:1px solid var(--border)}
+.dl-premium{background:linear-gradient(90deg,#7c3aed,#d97706);color:#fff;box-shadow:0 4px 14px rgba(124,58,237,.35)}
+.dl-pro{background:var(--off);color:var(--gray-700);border:1px solid var(--border)}
+.dl-pro:hover{background:var(--gray-50)}
 .cnt{background:rgba(255,255,255,.25);border-radius:999px;padding:1px 8px;font-size:13px}
 
 /* TOAST */
@@ -233,7 +234,7 @@ tbody tr:hover td{background:var(--off)}
         <circle cx="34" cy="34" r="8" fill="#7c3aed"/>
         <circle cx="34" cy="34" r="4" fill="#fff"/>
       </svg>
-      <span class="logo-text">FastGeoTagger</span>
+      <span class="logo-text">Fastgeotag</span>
     </a>
     <h1 class="page-title"><span>Geotag Photos </span><span class="online">Online</span></h1>
     <div class="header-actions">
@@ -392,20 +393,35 @@ tbody tr:hover td{background:var(--off)}
     <a href="mailto:info@fastgeotagger.com">info@fastgeotagger.com</a>.
   </div>
 
-  <footer class="site-footer">© 2026 FastGeoTagger. All rights reserved.</footer>
+  <footer class="site-footer">© 2026 Fastgeotag. All rights reserved.</footer>
 </main>
 
 <div class="bot-bar">
-  <button class="dl-btn dl-main" type="button" onclick="tagAndDownload('jpg')">⬇ Download Tagged <span class="cnt" id="cnt">0</span></button>
-  <button class="dl-btn dl-webp" type="button" onclick="tagAndDownload('webp')">⬇ WebP</button>
-  <button class="dl-btn dl-avif" type="button" onclick="tagAndDownload('avif')">⬇ AVIF</button>
+  <button class="dl-btn dl-main" type="button" onclick="tagAndDownload()">⬇ Download Tagged <span class="cnt" id="cnt">0</span></button>
+  <button class="dl-btn dl-premium" type="button" onclick="showPremiumModal()">⭐ Premium</button>
+  <button class="dl-btn dl-pro" type="button" onclick="showPremiumModal('format')">⬇ WebP / AVIF</button>
+</div>
+
+<div class="modal-bg" id="premium-modal">
+  <div class="modal">
+    <h3>Upgrade to Premium</h3>
+    <p style="font-size:14px;color:var(--gray-500);line-height:1.6;margin-bottom:8px">Unlock ad-free geotagging, WebP &amp; AVIF export, URL photo extraction, and batch metadata tools.</p>
+    <ul style="font-size:14px;color:var(--gray-700);margin:12px 0 20px 20px;line-height:1.8">
+      <li>WebP &amp; AVIF download formats</li>
+      <li>Extract photos from any URL</li>
+      <li>Ad-free experience</li>
+      <li>Priority support</li>
+    </ul>
+    <div class="modal-foot">
+      <button class="btn-cancel" type="button" onclick="closePremiumModal()">Maybe later</button>
+      <button class="btn-save" type="button" onclick="closePremiumModal(); showToast('Premium checkout coming soon', 'ok');">Upgrade to Pro</button>
+    </div>
+  </div>
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script src="https://cdn.jsdelivr.net/npm/piexifjs@1.0.6/piexif.min.js"></script>
 <script>
-const API = window.location.hostname === 'localhost'
-  ? 'http://localhost:8000'
-  : 'https://instantgeotagger.up.railway.app';
 
 let files = [];
 let selLat = null, selLng = null;
@@ -580,8 +596,16 @@ function toggleInfoPanel(id) {
   }
 }
 
-function showProToast() { showToast('Pro upgrade coming soon — ad-free & URL extraction', 'ok'); }
+function showProToast() { showPremiumModal(); }
 function showLoginToast() { showToast('Login coming soon', 'ok'); }
+function showPremiumModal(context) {
+  if (context === 'format') {
+    showToast('WebP & AVIF export is a Premium feature — upgrade to unlock', 'warn');
+  }
+  document.getElementById('premium-modal').classList.add('open');
+}
+function closePremiumModal() { document.getElementById('premium-modal').classList.remove('open'); }
+document.getElementById('premium-modal').addEventListener('click', e => { if (e.target === e.currentTarget) closePremiumModal(); });
 
 if (window.matchMedia('(max-width:767px)').matches) {
   const desktop = document.querySelector('.pro-label-desktop');
@@ -756,55 +780,118 @@ function saveMetadata() {
   closeModal(); renderTable(); showToast('Metadata saved ✓', 'ok');
 }
 document.getElementById('meta-modal').addEventListener('click', e => { if (e.target===e.currentTarget) closeModal(); });
-document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeModal(); closePremiumModal(); } });
 
-async function tagAndDownload(format) {
+function decToDms(dec) {
+  const abs = Math.abs(dec);
+  const deg = Math.floor(abs);
+  const minFloat = (abs - deg) * 60;
+  const min = Math.floor(minFloat);
+  const sec = Math.round((minFloat - min) * 60 * 100);
+  return [[deg, 1], [min, 1], [sec, 100]];
+}
+
+function blobToDataUrl(blob) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+}
+
+function dataUrlToBlob(dataUrl) {
+  const [header, b64] = dataUrl.split(',');
+  const mime = (header.match(/:(.*?);/) || [])[1] || 'image/jpeg';
+  const bin = atob(b64);
+  const arr = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+  return new Blob([arr], { type: mime });
+}
+
+function fileToJpegDataUrl(file, quality) {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      const canvas = document.createElement('canvas');
+      canvas.width = img.naturalWidth;
+      canvas.height = img.naturalHeight;
+      canvas.getContext('2d').drawImage(img, 0, 0);
+      resolve(canvas.toDataURL('image/jpeg', quality));
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('Could not read image')); };
+    img.src = url;
+  });
+}
+
+function outputFilename(name) {
+  const base = name.replace(/\.[^.]+$/, '');
+  return base + '_geotagged.jpg';
+}
+
+async function geotagFileClient(entry, lat, lng) {
+  const quality = compress ? 0.75 : 0.92;
+  const isJpeg = entry.file.type === 'image/jpeg' || /\.jpe?g$/i.test(entry.file.name);
+  let dataUrl = isJpeg && !compress
+    ? await blobToDataUrl(entry.file)
+    : await fileToJpegDataUrl(entry.file, quality);
+
+  let exifObj = {};
+  try { exifObj = piexif.load(dataUrl); } catch {
+    exifObj = { '0th': {}, Exif: {}, GPS: {}, '1st': {}, Interop: {}, thumbnail: null };
+  }
+
+  exifObj.GPS = {
+    GPSLatitudeRef: lat >= 0 ? 'N' : 'S',
+    GPSLatitude: decToDms(lat),
+    GPSLongitudeRef: lng >= 0 ? 'E' : 'W',
+    GPSLongitude: decToDms(lng),
+  };
+
+  const { title, author, copyright } = entry.metadata;
+  if (title) exifObj['0th'][piexif.ImageIFD.ImageDescription] = title;
+  if (author) exifObj['0th'][piexif.ImageIFD.Artist] = author;
+  if (copyright) exifObj['0th'][piexif.ImageIFD.Copyright] = copyright;
+
+  const exifBytes = piexif.dump(exifObj);
+  return dataUrlToBlob(piexif.insert(exifBytes, dataUrl));
+}
+
+function downloadBlob(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+async function tagAndDownload() {
   if (!files.length) { showToast('Upload at least one photo first', 'err'); return; }
   if (selLat === null) { showToast('Please pick a location on the map first', 'err'); return; }
 
-  showToast('Processing photos…', '');
+  showToast('Geotagging in your browser…', '');
   setProgress(10);
 
   try {
-    const fd = new FormData();
-    files.forEach(f => fd.append('files', f.file));
-    fd.append('lat', selLat);
-    fd.append('lng', selLng);
-    fd.append('compress', compress);
-
-    setProgress(30);
-    const tr = await fetch(`${API}/api/tag`, { method: 'POST', body: fd });
-    if (!tr.ok) throw new Error('Backend: ' + (await tr.text()));
-    const td = await tr.json();
-    setProgress(60);
-
-    for (const filename of td.files) {
-      let dlUrl = `${API}/api/download/${td.token}/${filename}`;
-      if (format !== 'jpg') {
-        const cr = await fetch(`${API}/api/convert`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ token: td.token, filename, format })
-        });
-        if (!cr.ok) throw new Error('Conversion failed');
-        dlUrl = API + (await cr.json()).download_url;
-      }
-      const a = document.createElement('a');
-      a.href = dlUrl;
-      a.download = filename.replace('.jpg', `.${format}`);
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      await new Promise(r => setTimeout(r, 400));
+    let done = 0;
+    for (const entry of files) {
+      const blob = await geotagFileClient(entry, selLat, selLng);
+      downloadBlob(blob, outputFilename(entry.file.name));
+      done++;
+      setProgress(10 + Math.round((done / files.length) * 85));
+      await new Promise(r => setTimeout(r, 300));
     }
-
     setProgress(100);
-    showToast(`✓ ${td.files.length} photo${td.files.length>1?'s':''} geotagged & downloaded!`, 'ok');
-    fetch(`${API}/api/cleanup/${td.token}`, { method: 'DELETE' });
+    showToast(`✓ ${files.length} photo${files.length > 1 ? 's' : ''} geotagged & downloaded!`, 'ok');
     setTimeout(() => setProgress(0, true), 1800);
   } catch (err) {
     console.error(err);
-    showToast('Error: ' + err.message, 'err');
+    showToast('Error: ' + (err.message || 'Geotagging failed'), 'err');
     setProgress(0, true);
   }
 }

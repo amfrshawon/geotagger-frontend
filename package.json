@@ -2,7 +2,7 @@
   "name": "geotagger-frontend",
   "version": "1.0.0",
   "private": true,
-  "description": "FastGeoTagger-inspired online photo geotagging tool",
+  "description": "Fastgeotag online photo geotagging tool",
   "scripts": {
     "dev": "npx --yes serve . -p 3000",
     "start": "npm run dev",
