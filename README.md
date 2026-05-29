@@ -26,7 +26,7 @@ Alternatively:
 python3 -m http.server 3000
 ```
 
-The tagging API defaults to `https://instantgeotagger.up.railway.app`. On `localhost`, it expects a backend at `http://localhost:8000`.
+Geotagging runs entirely in the browser via piexifjs — no backend server required for JPG downloads.
 
 ## Build
 
@@ -44,7 +44,7 @@ This repo is already set up for GitHub Pages (`amfrshawon.github.io/geotagger-fr
 
 ```bash
 git add .
-git commit -m "Update FastGeoTagger UI"
+git commit -m "Update Fastgeotag UI"
 git push origin main
 ```
 
@@ -72,6 +72,5 @@ geotagger-frontend/
 
 ## Notes
 
-- **Login / Pro / URL extraction**: UI placeholders only; wire to your auth and billing when ready.
+- **Premium**: WebP/AVIF export and URL extraction are upgrade CTAs (wire to billing when ready).
 - **Maps**: Leaflet + CARTO Voyager tiles + Photon search — no Google API key or billing required.
-- **Backend**: Geotagging requires the Railway API (or your own backend) for EXIF embedding.
