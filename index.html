@@ -653,10 +653,10 @@ function renderAdminUserList() {
     list.innerHTML = '<div class="user-row" style="color:var(--gray-500)">No Pro users yet</div>';
     return;
   }
-  list.innerHTML = users.map(u => `
+  list.innerHTML = users.map((u, i) => `
     <div class="user-row">
       <span>${u.username}</span>
-      <button type="button" class="btn-danger" onclick="removeProUser('${u.username}')">Remove</button>
+      <button type="button" class="btn-danger" onclick="removeProUser(${i})">Remove</button>
     </div>`).join('');
 }
 
